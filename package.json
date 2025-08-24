@@ -1,15 +1,17 @@
 {
-  "name": "nodejs",
+  "name": "workspace",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@types/node": "^22.13.11"
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.17.1"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }

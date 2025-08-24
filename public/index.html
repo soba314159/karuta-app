@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2025 カレンダー参加システム</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #f0f4f8;
+        --text-color: #333;
+        --card-bg: #fff;
+        --border-color: #e0e0e0;
+      }
+
+      body {
+        font-family: "Noto Sans JP", sans-serif;
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+        padding: 20px;
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 600px;
+        background: var(--card-bg);
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      h1,
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      /* ログインエリア */
+      #loginArea,
+      #loggedInUser {
+        margin-bottom: 25px;
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: #fafafa;
+        text-align: center;
+      }
+
+      #loginArea label {
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      #userNameInput {
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        width: 80%;
+        max-width: 250px;
+        box-sizing: border-box;
+      }
+
+      #loginBtn,
+      #logoutBtn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 700;
+        transition:
+          background-color 0.3s,
+          transform 0.1s;
+      }
+
+      #loginBtn {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+
+      #loginBtn:hover {
+        background-color: #3a75c1;
+      }
+
+      #logoutBtn {
+        background-color: #f44336;
+        color: #fff;
+        margin-left: 10px;
+      }
+
+      #logoutBtn:hover {
+        background-color: #d32f2f;
+      }
+
+      #loginStatus {
+        font-weight: 700;
+      }
+
+      /* カレンダーヘッダー */
+      #calendarHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        background: #e9ecef;
+        padding: 10px 20px;
+        border-radius: 8px;
+      }
+
+      #prevMonth,
+      #nextMonth {
+        cursor: pointer;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-color);
+        user-select: none;
+        transition: color 0.2s;
+      }
+
+      #prevMonth:hover,
+      #nextMonth:hover {
+        color: var(--primary-color);
+      }
+
+      #monthYear {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary-color);
+      }
+
+      /* カレンダーグリッド */
+      #calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+
+      .dayName {
+        font-weight: 700;
+        text-align: center;
+        padding: 8px 0;
+        background: var(--primary-color);
+        color: #fff;
+        border-radius: 6px;
+      }
+
+      .dateBtn {
+        padding: 15px 0;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        background: var(--card-bg);
+        transition:
+          background-color 0.3s,
+          transform 0.1s,
+          box-shadow 0.2s;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .dateBtn:hover {
+        background-color: #e6f2ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .dateBtn.today {
+        background-color: #ffe082;
+        color: var(--text-color);
+        font-weight: 700;
+      }
+
+      .dateBtn.inactive {
+        background-color: var(--secondary-color);
+        color: #bbb;
+        cursor: default;
+        box-shadow: none;
+      }
+
+      .dateBtn.inactive:hover {
+        transform: none;
+        background-color: var(--secondary-color);
+        box-shadow: none;
+      }
+
+      /* ノートの色付け */
+      .dateBtn[style*="background-color"]:not(.inactive):not(.today) {
+        color: var(--text-color);
+        font-weight: 700;
+        border: 2px solid var(--primary-color);
+      }
+
+      /* タイムスロットビュー */
+      #timeslots {
+        margin-top: 20px;
+        display: none;
+      }
+
+      #slotContainer {
+        display: grid;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .slot-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: #fafafa;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .slot-item > span {
+        font-weight: 700;
+        flex-grow: 1;
+      }
+
+      .join-btn {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 700;
+        background-color: #6c757d;
+        color: #fff;
+        transition: background-color 0.2s;
+      }
+
+      .join-btn:hover {
+        background-color: #5a6268;
+      }
+
+      button.joined {
+        background-color: #28a745 !important;
+      }
+
+      button.joined:hover {
+        background-color: #218838 !important;
+      }
+
+      .participant-list {
+        margin-left: 15px;
+        color: #6c757d;
+        font-size: 0.9em;
+        overflow-wrap: break-word;
+      }
+
+      #backBtn {
+        padding: 10px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--card-bg);
+        cursor: pointer;
+        font-weight: 700;
+        margin-bottom: 20px;
+        transition: background-color 0.2s;
+      }
+
+      #backBtn:hover {
+        background-color: #e9ecef;
+      }
+
+      #noteArea {
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      #noteText {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        box-sizing: border-box;
+      }
+
+      #colorPicker {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      #colorPicker .color-selector {
+        width: 30px;
+        height: 30px;
+        border: 2px solid transparent;
+        border-radius: 50%;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          border-color 0.2s;
+      }
+
+      #colorPicker .color-selector:hover {
+        transform: scale(1.1);
+      }
+
+      #colorPicker .color-selector.selected {
+        border-color: var(--primary-color);
+        transform: scale(1.2);
+      }
+
+      #saveNoteBtn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        background-color: var(--primary-color);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      #saveNoteBtn:hover {
+        background-color: #3a75c1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>参加システムカレンダー</h1>
+
+      <!-- ログインフォーム -->
+      <div id="loginArea">
+        <label
+          >名前: <input type="text" id="userNameInput" placeholder="名前を入力"
+        /></label>
+        <button id="loginBtn">ログイン</button>
+      </div>
+
+      <!-- ログイン後表示 -->
+      <div id="loggedInUser">
+        <span id="loginStatus"></span>
+        <button id="logoutBtn">ログアウト</button>
+      </div>
+
+      <!-- カレンダービュー -->
+      <div id="calendarView">
+        <div id="calendarHeader">
+          <span id="prevMonth">&lt;</span>
+          <span id="monthYear"></span>
+          <span id="nextMonth">&gt;</span>
+        </div>
+        <div id="calendar"></div>
+      </div>
+
+      <!-- タイムスロットビュー -->
+      <div id="timeslots">
+        <h2 id="selectedDate"></h2>
+        <button id="backBtn">← 戻る</button>
+        <div id="slotContainer"></div>
+
+        <!-- 備考と色付けエリア -->
+        <div id="noteArea">
+          <h3>備考と色</h3>
+          <textarea id="noteText" placeholder="備考を入力"></textarea>
+          <div id="colorPicker">
+            <div
+              class="color-selector"
+              style="background-color: #f5f5f5"
+              data-color="#f5f5f5"
+            ></div>
+            <div
+              class="color-selector"
+              style="background-color: #ffcccc"
+              data-color="#ffcccc"
+            ></div>
+            <div
+              class="color-selector"
+              style="background-color: #ccffcc"
+              data-color="#ccffcc"
+            ></div>
+            <div
+              class="color-selector"
+              style="background-color: #ccccff"
+              data-color="#ccccff"
+            ></div>
+            <div
+              class="color-selector"
+              style="background-color: #ffffcc"
+              data-color="#ffffcc"
+            ></div>
+            <div
+              class="color-selector"
+              style="background-color: #e0e0e0"
+              data-color="#e0e0e0"
+            ></div>
+          </div>
+          <button id="saveNoteBtn">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = window.location.origin;
+
+      // ------- ユーザー管理 -------
+      const loginArea = document.getElementById("loginArea");
+      const loggedInUser = document.getElementById("loggedInUser");
+      const userNameInput = document.getElementById("userNameInput");
+      const loginBtn = document.getElementById("loginBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const loginStatus = document.getElementById("loginStatus");
+
+      let currentUser = null;
+
+      function updateLoginDisplay() {
+        if (currentUser) {
+          loggedInUser.style.display = "block";
+          loginArea.style.display = "none";
+          loginStatus.textContent = `${currentUser} さんでログイン中`;
+        } else {
+          loggedInUser.style.display = "none";
+          loginArea.style.display = "flex";
+        }
+      }
+
+      function loadUser() {
+        const saved = localStorage.getItem("userName");
+        if (saved) {
+          currentUser = saved;
+        }
+        updateLoginDisplay();
+      }
+
+      loadUser();
+
+      loginBtn.addEventListener("click", () => {
+        const val = userNameInput.value.trim();
+        if (val) {
+          currentUser = val;
+          localStorage.setItem("userName", currentUser);
+          updateLoginDisplay();
+        } else {
+          alert("名前を入力してください");
+        }
+      });
+
+      logoutBtn.addEventListener("click", () => {
+        currentUser = null;
+        localStorage.removeItem("userName");
+        updateLoginDisplay();
+        timeslotsView.style.display = "none";
+        calendarView.style.display = "block";
+      });
+
+      // ------- カレンダーと参加管理 -------
+      const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
+      const calendarEl = document.getElementById("calendar");
+      const monthYearEl = document.getElementById("monthYear");
+      const prevMonthBtn = document.getElementById("prevMonth");
+      const nextMonthBtn = document.getElementById("nextMonth");
+      const calendarView = document.getElementById("calendarView");
+      const timeslotsView = document.getElementById("timeslots");
+      const selectedDateEl = document.getElementById("selectedDate");
+      const backBtn = document.getElementById("backBtn");
+      const slotContainer = document.getElementById("slotContainer");
+
+      const noteTextEl = document.getElementById("noteText");
+      const colorPickerEl = document.getElementById("colorPicker");
+      const saveNoteBtn = document.getElementById("saveNoteBtn");
+
+      const timeslots = [
+        "9:00-10:30",
+        "10:45-12:00",
+        "13:15-14:30",
+        "14:45-16:00",
+        "16:30-17:15",
+        "17:30-19:00",
+      ];
+
+      const joinedByDateAndSlot = {};
+      let notesByDate = {};
+
+      let year = new Date().getFullYear();
+      let month = new Date().getMonth();
+
+      const today = new Date();
+      const todayYear = today.getFullYear();
+      const todayMonth = today.getMonth();
+      const todayDate = today.getDate();
+
+      async function fetchNotesForMonth() {
+        const res = await fetch(
+          `${API_BASE_URL}/api/notes-by-month?year=${year}&month=${month + 1}`,
+        );
+        const data = await res.json();
+        notesByDate = {};
+        if (data.notes) {
+          data.notes.forEach((note) => {
+            notesByDate[note.date] = {
+              color: note.color,
+              text: note.text,
+            };
+          });
+        }
+      }
+
+      function renderCalendar() {
+        calendarEl.innerHTML = "";
+        dayNames.forEach((d) => {
+          const dEl = document.createElement("div");
+          dEl.textContent = d;
+          dEl.classList.add("dayName");
+          calendarEl.appendChild(dEl);
+        });
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const firstWeekDay = firstDay.getDay();
+        const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+        for (let i = firstWeekDay - 1; i >= 0; i--) {
+          const prevDate = prevMonthLastDay - i;
+          const btn = document.createElement("button");
+          btn.textContent = prevDate;
+          btn.classList.add("dateBtn", "inactive");
+          calendarEl.appendChild(btn);
+        }
+
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+          const btn = document.createElement("button");
+          btn.textContent = d;
+          btn.classList.add("dateBtn");
+
+          const dateKey = `${year}-${month + 1}-${d}`;
+          if (
+            notesByDate[dateKey] &&
+            notesByDate[dateKey].color !== "#f5f5f5"
+          ) {
+            btn.style.backgroundColor = notesByDate[dateKey].color;
+          }
+
+          if (year === todayYear && month === todayMonth && d === todayDate) {
+            btn.classList.add("today");
+          }
+
+          btn.addEventListener("click", () => {
+            showTimeslots(d);
+          });
+          calendarEl.appendChild(btn);
+        }
+
+        const totalCells = firstWeekDay + lastDay.getDate();
+        const emptyCells = (7 - (totalCells % 7)) % 7;
+        for (let i = 0; i < emptyCells; i++) {
+          const emptyEl = document.createElement("div");
+          calendarEl.appendChild(emptyEl);
+        }
+        monthYearEl.textContent = `${year}年 ${month + 1}月`;
+      }
+
+      async function showTimeslots(day) {
+        calendarView.style.display = "none";
+        timeslotsView.style.display = "block";
+        selectedDateEl.textContent = `${year}年${month + 1}月${day}日の参加フォーム`;
+
+        const dateKey = `${year}-${month + 1}-${day}`;
+        if (!joinedByDateAndSlot[dateKey]) joinedByDateAndSlot[dateKey] = {};
+
+        slotContainer.innerHTML = "";
+
+        const note = notesByDate[dateKey];
+        noteTextEl.value = note ? note.text : "";
+        let selectedColor = note ? note.color : "#f5f5f5";
+
+        document.querySelectorAll(".color-selector").forEach((selector) => {
+          selector.classList.remove("selected");
+          if (selector.dataset.color === selectedColor) {
+            selector.classList.add("selected");
+          }
+          selector.onclick = () => {
+            document
+              .querySelector(".color-selector.selected")
+              ?.classList.remove("selected");
+            selector.classList.add("selected");
+            selectedColor = selector.dataset.color;
+          };
+        });
+
+        saveNoteBtn.onclick = async () => {
+          if (!currentUser) {
+            alert("ログインしてください");
+            return;
+          }
+          const newNote = {
+            date: dateKey,
+            color: selectedColor,
+            text: noteTextEl.value,
+          };
+          const saveRes = await fetch(`${API_BASE_URL}/api/notes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newNote),
+          });
+          const saveResult = await saveRes.json();
+          if (saveResult.success) {
+            alert("備考を保存しました");
+            await fetchNotesForMonth();
+            renderCalendar();
+            backBtn.click();
+          } else {
+            alert("備考の保存に失敗しました");
+          }
+        };
+
+        timeslots.forEach((slot) => {
+          if (!joinedByDateAndSlot[dateKey][slot]) {
+            joinedByDateAndSlot[dateKey][slot] = new Set();
+          }
+
+          const container = document.createElement("div");
+          container.classList.add("slot-item");
+          const timeSpan = document.createElement("span");
+          timeSpan.textContent = slot;
+
+          const joinBtn = document.createElement("button");
+          joinBtn.classList.add("join-btn");
+
+          const participantSpan = document.createElement("span");
+          participantSpan.classList.add("participant-list");
+
+          function updateParticipantDisplay() {
+            const names = Array.from(joinedByDateAndSlot[dateKey][slot]);
+            participantSpan.textContent = names.length
+              ? `参加者: ${names.join(", ")}`
+              : "";
+
+            if (joinedByDateAndSlot[dateKey][slot].has(currentUser)) {
+              joinBtn.textContent = "参加取消";
+              joinBtn.classList.add("joined");
+            } else {
+              joinBtn.textContent = "参加";
+              joinBtn.classList.remove("joined");
+            }
+          }
+
+          function updateParticipantsFromServer() {
+            fetch(
+              `${API_BASE_URL}/api/participants?date=${encodeURIComponent(
+                dateKey,
+              )}&timeSlot=${encodeURIComponent(slot)}`,
+            )
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.participants) {
+                  joinedByDateAndSlot[dateKey][slot] = new Set(
+                    data.participants,
+                  );
+                  updateParticipantDisplay();
+                }
+              })
+              .catch(() => {
+                console.error("参加者情報の取得に失敗しました");
+                updateParticipantDisplay();
+              });
+          }
+
+          updateParticipantsFromServer();
+
+          setInterval(() => {
+            updateParticipantsFromServer();
+          }, 3000);
+
+          joinBtn.addEventListener("click", () => {
+            if (!currentUser) {
+              alert("ログインしてください");
+              return;
+            }
+
+            const payload = {
+              date: dateKey,
+              timeSlot: slot,
+              userName: currentUser,
+            };
+
+            fetch(`${API_BASE_URL}/api/participate`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                console.log("参加API応答:", data);
+                if (data.success) {
+                  updateParticipantsFromServer();
+                } else {
+                  alert("参加登録に失敗しました");
+                }
+              })
+              .catch(() => {
+                alert("通信エラーが発生しました");
+              });
+          });
+
+          container.appendChild(timeSpan);
+          container.appendChild(joinBtn);
+          container.appendChild(participantSpan);
+
+          slotContainer.appendChild(container);
+        });
+      }
+
+      backBtn.addEventListener("click", () => {
+        timeslotsView.style.display = "none";
+        calendarView.style.display = "block";
+      });
+
+      prevMonthBtn.addEventListener("click", async () => {
+        month--;
+        if (month < 0) {
+          month = 11;
+          year--;
+        }
+        await fetchNotesForMonth();
+        renderCalendar();
+      });
+
+      nextMonthBtn.addEventListener("click", async () => {
+        month++;
+        if (month > 11) {
+          month = 0;
+          year++;
+        }
+        await fetchNotesForMonth();
+        renderCalendar();
+      });
+
+      async function initialize() {
+        await fetchNotesForMonth();
+        renderCalendar();
+      }
+
+      initialize();
+    </script>
+  </body>
+</html>
