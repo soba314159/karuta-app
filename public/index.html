@@ -10,6 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap"
       rel="stylesheet"
     />
+
     <style>
       :root {
         --primary-color: #4a90e2;
@@ -29,6 +30,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 20px; /* 各セクション間のスペース */
       }
 
       .container {
@@ -39,6 +41,103 @@
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       }
+      #battleArea,
+      #battleView {
+        width: 100%;
+        max-width: 600px;
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: none; /* 初期状態は非表示 */
+      }
+
+      #battleArea {
+        padding: 0; /* ボタンだけのエリアはパディング不要 */
+        box-shadow: none;
+        background: none;
+        text-align: center;
+      }
+
+      #battleBtn {
+        padding: 10px 20px;
+        background-color: #9c27b0;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        max-width: 200px;
+      }
+
+      #battleList {
+        margin-bottom: 20px;
+      }
+
+      #addBattleBtn {
+        padding: 10px 15px;
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        font-size: 24px;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        float: right;
+      }
+
+      /* ▼▼▼ 対戦記録フォーム用のスタイル ▼▼▼ */
+      #battleInputForm {
+        display: none; /* 初期状態は非表示 */
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: #fafafa;
+      }
+      .form-row {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+      }
+      .form-row label {
+        width: 100px;
+        font-weight: bold;
+      }
+      .form-row input[type="text"],
+      .form-row input[type="number"] {
+        flex-grow: 1;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+      }
+      .form-row .radio-group {
+        display: flex;
+        gap: 15px;
+      }
+      .form-buttons {
+        text-align: right;
+        margin-top: 20px;
+      }
+      .form-buttons button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+      #saveBattleBtn {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+      #cancelBattleBtn {
+        background-color: #6c757d;
+        color: #fff;
+      }
+      /* ▲▲▲ スタイルここまで ▲▲▲ */
 
       h1,
       h2 {
@@ -56,11 +155,10 @@
         border-radius: 8px;
         background: #fafafa;
         text-align: center;
-      }
-
-      #loginArea label {
-        display: block;
-        margin-bottom: 10px;
+        display: flex; /* Flexboxで中央揃え */
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
       }
 
       #userNameInput {
@@ -96,7 +194,6 @@
       #logoutBtn {
         background-color: #f44336;
         color: #fff;
-        margin-left: 10px;
       }
 
       #logoutBtn:hover {
@@ -219,11 +316,12 @@
         background: #fafafa;
         border-radius: 8px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        flex-wrap: wrap; /* 画面が小さい時に折り返す */
       }
 
-      .slot-item > span {
+      .slot-item > span:first-child {
         font-weight: 700;
-        flex-grow: 1;
+        flex-basis: 120px; /* 時間表示の幅を固定 */
       }
 
       .join-btn {
@@ -235,6 +333,7 @@
         background-color: #6c757d;
         color: #fff;
         transition: background-color 0.2s;
+        margin-right: 15px;
       }
 
       .join-btn:hover {
@@ -250,10 +349,10 @@
       }
 
       .participant-list {
-        margin-left: 15px;
         color: #6c757d;
         font-size: 0.9em;
         overflow-wrap: break-word;
+        flex-grow: 1;
       }
 
       #backBtn {
@@ -331,25 +430,61 @@
       }
     </style>
   </head>
+
   <body>
+    <div id="battleArea">
+      <button id="battleBtn">⚔ 対戦</button>
+    </div>
+
+    <div id="battleView">
+      <h2>自分の戦績</h2>
+      <div id="battleList"></div>
+      <button id="addBattleBtn">＋</button>
+
+      <div id="battleInputForm">
+        <div class="form-row">
+          <label for="opponentName">相手の名前:</label>
+          <input type="text" id="opponentName" placeholder="名前" />
+        </div>
+        <div class="form-row">
+          <label for="opponentRank">相手の級:</label>
+          <input type="text" id="opponentRank" placeholder="例: 5級, 初段" />
+        </div>
+        <div class="form-row">
+          <label>勝敗:</label>
+          <div class="radio-group">
+            <label
+              ><input type="radio" name="result" value="勝ち" checked />
+              勝ち</label
+            >
+            <label
+              ><input type="radio" name="result" value="負け" /> 負け</label
+            >
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="margin">枚数差:</label>
+          <input type="number" id="margin" placeholder="半角数字" />
+        </div>
+        <div class="form-buttons">
+          <button id="cancelBattleBtn">キャンセル</button>
+          <button id="saveBattleBtn">登録</button>
+        </div>
+      </div>
+      </div>
+
     <div class="container">
       <h1>参加システムカレンダー</h1>
 
-      <!-- ログインフォーム -->
       <div id="loginArea">
-        <label
-          >名前: <input type="text" id="userNameInput" placeholder="名前を入力"
-        /></label>
+        <input id="userNameInput" placeholder="名前を入力" />
         <button id="loginBtn">ログイン</button>
       </div>
 
-      <!-- ログイン後表示 -->
-      <div id="loggedInUser">
+      <div id="loggedInUser" style="display: none">
         <span id="loginStatus"></span>
         <button id="logoutBtn">ログアウト</button>
       </div>
-
-      <!-- カレンダービュー -->
       <div id="calendarView">
         <div id="calendarHeader">
           <span id="prevMonth">&lt;</span>
@@ -359,13 +494,11 @@
         <div id="calendar"></div>
       </div>
 
-      <!-- タイムスロットビュー -->
       <div id="timeslots">
         <h2 id="selectedDate"></h2>
         <button id="backBtn">← 戻る</button>
         <div id="slotContainer"></div>
 
-        <!-- 備考と色付けエリア -->
         <div id="noteArea">
           <h3>備考と色</h3>
           <textarea id="noteText" placeholder="備考を入力"></textarea>
@@ -421,13 +554,14 @@
 
       function updateLoginDisplay() {
         if (currentUser) {
-          loggedInUser.style.display = "block";
+          loggedInUser.style.display = "flex";
           loginArea.style.display = "none";
           loginStatus.textContent = `${currentUser} さんでログイン中`;
         } else {
           loggedInUser.style.display = "none";
           loginArea.style.display = "flex";
         }
+        updateBattleDisplay(); // 対戦機能の表示も連動させる
       }
 
       function loadUser() {
@@ -437,8 +571,6 @@
         }
         updateLoginDisplay();
       }
-
-      loadUser();
 
       loginBtn.addEventListener("click", () => {
         const val = userNameInput.value.trim();
@@ -471,6 +603,7 @@
       const backBtn = document.getElementById("backBtn");
       const slotContainer = document.getElementById("slotContainer");
 
+      const noteArea = document.getElementById("noteArea");
       const noteTextEl = document.getElementById("noteText");
       const colorPickerEl = document.getElementById("colorPicker");
       const saveNoteBtn = document.getElementById("saveNoteBtn");
@@ -496,18 +629,25 @@
       const todayDate = today.getDate();
 
       async function fetchNotesForMonth() {
-        const res = await fetch(
-          `${API_BASE_URL}/api/notes-by-month?year=${year}&month=${month + 1}`,
-        );
-        const data = await res.json();
-        notesByDate = {};
-        if (data.notes) {
-          data.notes.forEach((note) => {
-            notesByDate[note.date] = {
-              color: note.color,
-              text: note.text,
-            };
-          });
+        try {
+          const res = await fetch(
+            `${API_BASE_URL}/api/notes-by-month?year=${year}&month=${
+              month + 1
+            }`,
+          );
+          if (!res.ok) throw new Error("Network response was not ok");
+          const data = await res.json();
+          notesByDate = {};
+          if (data.notes) {
+            data.notes.forEach((note) => {
+              notesByDate[note.date] = {
+                color: note.color,
+                text: note.text,
+              };
+            });
+          }
+        } catch (error) {
+          console.error("備考の取得に失敗しました:", error);
         }
       }
 
@@ -560,6 +700,7 @@
         const emptyCells = (7 - (totalCells % 7)) % 7;
         for (let i = 0; i < emptyCells; i++) {
           const emptyEl = document.createElement("div");
+          emptyEl.classList.add("dateBtn", "inactive");
           calendarEl.appendChild(emptyEl);
         }
         monthYearEl.textContent = `${year}年 ${month + 1}月`;
@@ -568,56 +709,59 @@
       async function showTimeslots(day) {
         calendarView.style.display = "none";
         timeslotsView.style.display = "block";
-        selectedDateEl.textContent = `${year}年${month + 1}月${day}日の参加フォーム`;
+        selectedDateEl.textContent = `${year}年${
+          month + 1
+        }月${day}日の参加状況`;
 
         const dateKey = `${year}-${month + 1}-${day}`;
         if (!joinedByDateAndSlot[dateKey]) joinedByDateAndSlot[dateKey] = {};
 
         slotContainer.innerHTML = "";
 
-        const note = notesByDate[dateKey];
-        noteTextEl.value = note ? note.text : "";
-        let selectedColor = note ? note.color : "#f5f5f5";
+        if (currentUser) {
+          noteArea.style.display = "block";
+          const note = notesByDate[dateKey];
+          noteTextEl.value = note ? note.text : "";
+          let selectedColor = note ? note.color : "#f5f5f5";
 
-        document.querySelectorAll(".color-selector").forEach((selector) => {
-          selector.classList.remove("selected");
-          if (selector.dataset.color === selectedColor) {
-            selector.classList.add("selected");
-          }
-          selector.onclick = () => {
-            document
-              .querySelector(".color-selector.selected")
-              ?.classList.remove("selected");
-            selector.classList.add("selected");
-            selectedColor = selector.dataset.color;
-          };
-        });
-
-        saveNoteBtn.onclick = async () => {
-          if (!currentUser) {
-            alert("ログインしてください");
-            return;
-          }
-          const newNote = {
-            date: dateKey,
-            color: selectedColor,
-            text: noteTextEl.value,
-          };
-          const saveRes = await fetch(`${API_BASE_URL}/api/notes`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newNote),
+          document.querySelectorAll(".color-selector").forEach((selector) => {
+            selector.classList.remove("selected");
+            if (selector.dataset.color === selectedColor) {
+              selector.classList.add("selected");
+            }
+            selector.onclick = () => {
+              document
+                .querySelector(".color-selector.selected")
+                ?.classList.remove("selected");
+              selector.classList.add("selected");
+              selectedColor = selector.dataset.color;
+            };
           });
-          const saveResult = await saveRes.json();
-          if (saveResult.success) {
-            alert("備考を保存しました");
-            await fetchNotesForMonth();
-            renderCalendar();
-            backBtn.click();
-          } else {
-            alert("備考の保存に失敗しました");
-          }
-        };
+
+          saveNoteBtn.onclick = async () => {
+            const newNote = {
+              date: dateKey,
+              color: selectedColor,
+              text: noteTextEl.value,
+            };
+            const saveRes = await fetch(`${API_BASE_URL}/api/notes`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(newNote),
+            });
+            const saveResult = await saveRes.json();
+            if (saveResult.success) {
+              alert("備考を保存しました");
+              await fetchNotesForMonth();
+              renderCalendar();
+              backBtn.click();
+            } else {
+              alert("備考の保存に失敗しました");
+            }
+          };
+        } else {
+          noteArea.style.display = "none";
+        }
 
         timeslots.forEach((slot) => {
           if (!joinedByDateAndSlot[dateKey][slot]) {
@@ -629,89 +773,84 @@
           const timeSpan = document.createElement("span");
           timeSpan.textContent = slot;
 
-          const joinBtn = document.createElement("button");
-          joinBtn.classList.add("join-btn");
-
           const participantSpan = document.createElement("span");
           participantSpan.classList.add("participant-list");
+
+          let joinBtn = null;
 
           function updateParticipantDisplay() {
             const names = Array.from(joinedByDateAndSlot[dateKey][slot]);
             participantSpan.textContent = names.length
               ? `参加者: ${names.join(", ")}`
-              : "";
+              : "参加者なし";
 
-            if (joinedByDateAndSlot[dateKey][slot].has(currentUser)) {
-              joinBtn.textContent = "参加取消";
-              joinBtn.classList.add("joined");
-            } else {
-              joinBtn.textContent = "参加";
-              joinBtn.classList.remove("joined");
+            if (joinBtn) {
+              if (joinedByDateAndSlot[dateKey][slot].has(currentUser)) {
+                joinBtn.textContent = "参加取消";
+                joinBtn.classList.add("joined");
+              } else {
+                joinBtn.textContent = "参加";
+                joinBtn.classList.remove("joined");
+              }
             }
           }
 
-          function updateParticipantsFromServer() {
-            fetch(
-              `${API_BASE_URL}/api/participants?date=${encodeURIComponent(
-                dateKey,
-              )}&timeSlot=${encodeURIComponent(slot)}`,
-            )
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.participants) {
-                  joinedByDateAndSlot[dateKey][slot] = new Set(
-                    data.participants,
-                  );
-                  updateParticipantDisplay();
-                }
-              })
-              .catch(() => {
-                console.error("参加者情報の取得に失敗しました");
-                updateParticipantDisplay();
-              });
+          async function updateParticipantsFromServer() {
+            try {
+              const res = await fetch(
+                `${API_BASE_URL}/api/participants?date=${encodeURIComponent(
+                  dateKey,
+                )}&timeSlot=${encodeURIComponent(slot)}`,
+              );
+              if (!res.ok) throw new Error("Network response was not ok");
+              const data = await res.json();
+              if (data.participants) {
+                joinedByDateAndSlot[dateKey][slot] = new Set(
+                  data.participants,
+                );
+              }
+            } catch (error) {
+              console.error("参加者情報の取得に失敗しました:", error);
+            } finally {
+              updateParticipantDisplay();
+            }
           }
 
           updateParticipantsFromServer();
+          setInterval(updateParticipantsFromServer, 5000);
 
-          setInterval(() => {
-            updateParticipantsFromServer();
-          }, 3000);
+          container.appendChild(timeSpan);
 
-          joinBtn.addEventListener("click", () => {
-            if (!currentUser) {
-              alert("ログインしてください");
-              return;
-            }
+          if (currentUser) {
+            joinBtn = document.createElement("button");
+            joinBtn.classList.add("join-btn");
 
-            const payload = {
-              date: dateKey,
-              timeSlot: slot,
-              userName: currentUser,
-            };
-
-            fetch(`${API_BASE_URL}/api/participate`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                console.log("参加API応答:", data);
+            joinBtn.addEventListener("click", async () => {
+              const payload = {
+                date: dateKey,
+                timeSlot: slot,
+                userName: currentUser,
+              };
+              try {
+                const res = await fetch(`${API_BASE_URL}/api/participate`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+                const data = await res.json();
                 if (data.success) {
-                  updateParticipantsFromServer();
+                  await updateParticipantsFromServer();
                 } else {
                   alert("参加登録に失敗しました");
                 }
-              })
-              .catch(() => {
+              } catch {
                 alert("通信エラーが発生しました");
-              });
-          });
+              }
+            });
+            container.appendChild(joinBtn);
+          }
 
-          container.appendChild(timeSpan);
-          container.appendChild(joinBtn);
           container.appendChild(participantSpan);
-
           slotContainer.appendChild(container);
         });
       }
@@ -741,7 +880,119 @@
         renderCalendar();
       });
 
+      // ------- 対戦機能 -------
+      const battleArea = document.getElementById("battleArea");
+      const battleBtn = document.getElementById("battleBtn");
+      const battleView = document.getElementById("battleView");
+      const battleList = document.getElementById("battleList");
+      const addBattleBtn = document.getElementById("addBattleBtn");
+
+      const battleInputForm = document.getElementById("battleInputForm");
+      const opponentNameInput = document.getElementById("opponentName");
+      const opponentRankInput = document.getElementById("opponentRank");
+      const marginInput = document.getElementById("margin");
+      const saveBattleBtn = document.getElementById("saveBattleBtn");
+      const cancelBattleBtn = document.getElementById("cancelBattleBtn");
+
+      // ▼▼▼ ユーザーごとの戦績データを取得/保存する関数 ▼▼▼
+      function getBattlesForCurrentUser() {
+        if (!currentUser) return [];
+        const key = `battleData_${currentUser}`;
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+      }
+
+      function saveBattlesForCurrentUser(battles) {
+        if (!currentUser) return;
+        const key = `battleData_${currentUser}`;
+        localStorage.setItem(key, JSON.stringify(battles));
+      }
+      // ▲▲▲ ここまで ▲▲▲
+
+      function updateBattleDisplay() {
+        if (currentUser) {
+          battleArea.style.display = "block";
+        } else {
+          battleArea.style.display = "none";
+          battleView.style.display = "none";
+        }
+      }
+
+      function renderBattles() {
+        const battles = getBattlesForCurrentUser(); // ★ログインユーザーの戦績を取得
+        battleList.innerHTML = "";
+        if (battles.length === 0) {
+          battleList.innerHTML = "<p>まだ戦績がありません</p>";
+          return;
+        }
+        // 新しい記録が上に来るように逆順で表示
+        battles.slice().reverse().forEach((battle) => {
+          const div = document.createElement("div");
+          div.style.padding = "10px";
+          div.style.marginBottom = "10px";
+          div.style.border = "1px solid #ccc";
+          div.style.borderRadius = "6px";
+          div.textContent = `${battle.date}: ${battle.opponentName}(${battle.opponentRank}) に ${battle.margin}枚差で ${battle.result}`;
+          battleList.appendChild(div);
+        });
+      }
+
+      battleBtn.addEventListener("click", () => {
+        battleView.style.display =
+          battleView.style.display === "none" ? "block" : "none";
+        if (battleView.style.display === "block") {
+          renderBattles();
+        }
+      });
+
+      addBattleBtn.addEventListener("click", () => {
+        battleInputForm.style.display = "block";
+        addBattleBtn.style.display = "none";
+      });
+
+      cancelBattleBtn.addEventListener("click", () => {
+        battleInputForm.style.display = "none";
+        addBattleBtn.style.display = "block";
+        opponentNameInput.value = "";
+        opponentRankInput.value = "";
+        marginInput.value = "";
+        document.querySelector(
+          'input[name="result"][value="勝ち"]',
+        ).checked = true;
+      });
+
+      saveBattleBtn.addEventListener("click", () => {
+        const opponentName = opponentNameInput.value.trim();
+        const opponentRank = opponentRankInput.value.trim();
+        const result = document.querySelector(
+          'input[name="result"]:checked',
+        ).value;
+        const margin = marginInput.value.trim();
+
+        if (!opponentName || !opponentRank || !margin) {
+          alert("すべての項目を入力してください");
+          return;
+        }
+
+        const newBattle = {
+          date: new Date().toLocaleDateString(),
+          opponentName,
+          opponentRank,
+          result,
+          margin,
+        };
+
+        const battles = getBattlesForCurrentUser(); // ★現在のユーザーの戦績を取得
+        battles.push(newBattle); // ★新しい記録を追加
+        saveBattlesForCurrentUser(battles); // ★更新した戦績を保存
+
+        renderBattles();
+        cancelBattleBtn.click();
+      });
+
+      // ------- 初期化処理 -------
       async function initialize() {
+        loadUser();
         await fetchNotesForMonth();
         renderCalendar();
       }
