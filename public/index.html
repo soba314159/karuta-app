@@ -287,32 +287,39 @@
         loadMyWakas();
       }
 
-      function init() {
-        displayRandomWaka();
-        if (currentUser) {
-          document.getElementById("loginArea").style.display = "none";
-          document.getElementById("loggedInUser").style.display = "block";
-          document.getElementById("loginStatus").textContent = `門下生: ${currentUser}`;
-        }
-        document.getElementById("loginBtn").onclick = () => { const val = document.getElementById("userNameInput").value; if(val){localStorage.setItem("userName", val); location.reload();} };
-        document.getElementById("logoutBtn").onclick = () => { localStorage.removeItem("userName"); location.reload(); };
-        document.getElementById("backBtn").onclick = () => location.reload();
-        document.getElementById("hiddenWakaTrigger").onclick = () => document.getElementById("wakaModal").style.display = "flex";
-        document.getElementById("closeWakaModal").onclick = () => document.getElementById("wakaModal").style.display = "none";
-        document.getElementById("saveWakaBtn").onclick = async () => {
-          const text = document.getElementById("wakaInput").value;
-          const author = document.getElementById("wakaAuthorInput").value || "匿名";
-          if(!text) return alert("歌を詠んでください");
-          await fetch(`${API_BASE_URL}/api/waka`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ text, author, userId: currentUser }) });
-          alert("奉納しました");
-          document.getElementById("wakaInput").value = "";
-          switchWakaTab('manage');
-        };
-        document.getElementById("prevMonth").onclick = () => { month--; if(month<0){month=11; year--;} fetchNotes().then(renderCalendar); };
-        document.getElementById("nextMonth").onclick = () => { month++; if(month>11){month=0; year++;} fetchNotes().then(renderCalendar); };
-        fetchNotes().then(renderCalendar);
-      }
-      init();
+      async function displayRandomWaka() {
+  const textElem = document.getElementById("poemText");
+  const authorElem = document.getElementById("poemAuthor");
+
+  try {
+    // 1. 全員の和歌を取得
+    const res = await fetch(`${API_BASE_URL}/api/waka`);
+    const data = await res.json();
+    
+    // 2. データが存在するか（wakas配列に中身があるか）チェック
+    if (data.wakas && data.wakas.length > 0) {
+      // ランダムに1つ選ぶ
+      const randomIndex = Math.floor(Math.random() * data.wakas.length);
+      const selected = data.wakas[randomIndex];
+      
+      // 3. タイトルエリアの文字を上書き
+      textElem.textContent = `「${selected.text}」`;
+      authorElem.textContent = `― ${selected.author}`;
+    } else {
+      // 歌が一つもない場合はデフォルトを表示
+      setFallbackWaka(textElem, authorElem);
+    }
+  } catch (e) {
+    console.error("和歌の取得に失敗しました:", e);
+    setFallbackWaka(textElem, authorElem);
+  }
+}
+
+// 予備の表示用関数
+function setFallbackWaka(t, a) {
+  t.textContent = "「ちはやぶる 神代もきかず 竜田川 からくれなゐに 水くくるとは」";
+  a.textContent = "― 在原業平朝臣";
+}
     </script>
   </body>
 </html>
