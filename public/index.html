@@ -22,69 +22,54 @@
         background-color: var(--bg-washi);
         background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
         color: var(--text-sumi);
-        margin: 0;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center;
       }
 
-      /* 和歌エリア（変数の受け皿） */
-      #poemArea {
-        width: 100%;
-        max-width: 600px;
-        background: rgba(255, 255, 255, 0.6);
-        padding: 15px;
-        border: 1px solid var(--accent-color);
-        margin-bottom: 15px;
-        text-align: center;
-        box-sizing: border-box;
-        min-height: 80px;
+      .container, #timeslots {
+        width: 100%; max-width: 600px; background: rgba(255, 255, 255, 0.9);
+        padding: 20px; border: 1px solid #ccc; box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px; box-sizing: border-box;
       }
 
-      .container, #battleView, #timeslots {
-        width: 100%;
-        max-width: 600px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px;
-        border: 1px solid #ccc;
-        box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        box-sizing: border-box;
-      }
+      #userSection { width: 100%; max-width: 600px; display: flex; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; }
 
-      #userSection {
-        width: 100%;
-        max-width: 600px;
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 10px;
-        font-size: 14px;
-      }
+      /* 掲示板（トーク風スタイル） */
+      #bbsArea { width: 100%; max-width: 600px; background: white; border: 1px solid var(--accent-color); padding: 15px; margin-bottom: 20px; box-sizing: border-box; }
+      #bbsList { max-height: 400px; overflow-y: auto; margin-bottom: 15px; border-bottom: 1px solid #eee; }
+      
+      .bbs-post { margin-bottom: 15px; padding: 10px; border-radius: 8px; background: #f9f9f9; }
+      .bbs-meta { font-size: 0.75rem; color: #666; margin-bottom: 5px; display: flex; justify-content: space-between; }
+      .bbs-text { word-wrap: break-word; line-height: 1.5; }
+      .bbs-file { margin-top: 8px; max-width: 100%; border-radius: 4px; border: 1px solid #ddd; }
+      .file-link { font-size: 0.85rem; color: var(--primary-color); text-decoration: none; display: block; margin-top: 5px; }
 
-      /* カレンダー関連 */
+      /* 入力エリア */
+      #bbsForm { display: flex; flex-direction: column; gap: 8px; }
+      .form-row { display: flex; gap: 5px; }
+      #bbsInput { flex: 1; height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: none; }
+      #fileInput { display: none; }
+      .file-label { padding: 10px; background: #eee; cursor: pointer; border-radius: 4px; font-size: 1.2rem; }
+
+      /* カレンダー */
       #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
       .dayName { text-align: center; font-weight: bold; color: var(--primary-color); font-size: 12px; }
-      .dateBtn { aspect-ratio: 5/7; background: #fff; border: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 2px; cursor: pointer; transition: 0.2s; }
+      .dateBtn { aspect-ratio: 5/7; background: #fff; border: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 2px; cursor: pointer; }
       .dateBtn.today { border: 2px solid var(--accent-color); background: #fffcf0; }
-      .dateBtn.inactive { opacity: 0.3; background: transparent; pointer-events: none; }
-      .room-label-text { width: 100%; font-size: 11px; font-weight: bold; text-align: center; padding: 2px 0; border-radius: 2px; }
+      .room-label-text { width: 100%; font-size: 10px; font-weight: bold; text-align: center; padding: 2px 0; border-radius: 2px; }
       .room-A { background: #e3f2fd; color: #0d47a1; }
       .room-BC { background: #fffde7; color: #f57f17; }
       .room-ABC { background: #ffebee; color: #b71c1c; }
+      
+      button { font-family: inherit; cursor: pointer; }
       .joined { background: var(--primary-color) !important; color: white !important; }
-
-      /* タブ・ボタン */
-      .tab-header { display: flex; gap: 5px; margin-bottom: 20px; }
-      .tab-btn { flex: 1; padding: 10px; border: 1px solid var(--accent-color); background: white; font-weight: bold; cursor: pointer; }
-      .tab-btn.active { background: var(--accent-color); color: white; }
+      .slot-item { border-bottom: 1px dashed #ccc; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
     </style>
   </head>
 
   <body>
     <div id="userSection">
       <div id="loginArea">
-        <input id="userNameInput" placeholder="御名前" style="width: 80px; padding: 3px" />
+        <input id="userNameInput" placeholder="御名前" style="width: 80px;" />
         <button id="loginBtn">入室</button>
       </div>
       <div id="loggedInUser" style="display: none">
@@ -93,38 +78,29 @@
       </div>
     </div>
 
-    <div id="poemArea">
-      <div id="poemText">「詠みを読み込んでおります...」</div>
-      <div id="poemAuthor" style="text-align: right; font-size: 0.8rem; margin-top: 5px"></div>
+    <div id="bbsArea">
+      <h3 style="margin: 0 0 10px 0; color: var(--primary-color);">💬 稽古場トーク</h3>
+      <div id="bbsList">読込中...</div>
+      
+      <div id="bbsForm">
+        <div class="form-row">
+          <label for="fileInput" class="file-label" title="ファイルを添付">📎</label>
+          <input type="file" id="fileInput" />
+          <textarea id="bbsInput" placeholder="メッセージを入力..."></textarea>
+        </div>
+        <div id="fileNameDisplay" style="font-size: 0.8rem; color: #666;"></div>
+        <button id="postBbsBtn" style="background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold;">送信</button>
+      </div>
     </div>
 
     <div class="container" id="calendarView">
-      <h2 style="text-align: center; margin-bottom: 15px">練習日和</h2>
+      <h2 style="text-align: center;">練習カレンダー</h2>
       <div style="display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center;">
         <button id="prevMonth">前月</button>
-        <span id="monthYear" style="font-weight: bold; font-size: 1.1rem"></span>
+        <span id="monthYear" style="font-weight: bold;"></span>
         <button id="nextMonth">次月</button>
       </div>
       <div id="calendar"></div>
-      <button id="battleBtn" style="width: 100%; margin-top: 20px; padding: 12px; border: 1px solid var(--primary-color); background: white; color: var(--primary-color); font-weight: bold;">⚔ 戦績帳を確認する</button>
-    </div>
-
-    <div id="hiddenWakaTrigger" style="cursor: pointer; opacity: 0.3; font-size: 0.8rem; display: inline-block; margin-left: 100px;" title="言の葉を紡ぐ">🌸</div>
-
-    <div id="wakaModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center;">
-      <div class="container" style="background: var(--bg-washi); padding: 25px; border: 2px solid var(--accent-color); position: relative; max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto;">
-        <span id="closeWakaModal" style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 1.5rem;">×</span>
-        <div class="tab-header">
-          <button id="tabPost" class="tab-btn active" onclick="switchWakaTab('post')">和歌を詠む</button>
-          <button id="tabManage" class="tab-btn" onclick="switchWakaTab('manage')">自分の投稿</button>
-        </div>
-        <div id="wakaPostForm">
-          <textarea id="wakaInput" style="width: 100%; height: 100px; padding: 10px;" placeholder="五・七・五・七・七..."></textarea>
-          <input type="text" id="wakaAuthorInput" placeholder="お名前（匿名可）" style="width: 100%; margin-top: 10px; padding: 8px;" />
-          <button id="saveWakaBtn" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; margin-top: 15px;">奉納する</button>
-        </div>
-        <div id="wakaManageList" style="display: none;"><div id="myWakaContainer"></div></div>
-      </div>
     </div>
 
     <div id="timeslots" style="display: none">
@@ -132,9 +108,9 @@
       <h2 id="selectedDate" style="text-align: center"></h2>
       <div id="slotContainer"></div>
       <div style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-top: 20px;">
-        <select id="roomSelect" style="width: 100%; padding: 10px;"><option value="none">予約なし</option><option value="A">和室A</option><option value="B・C">和室B＋C</option><option value="A・B・C">和室A＋B＋C</option></select>
-        <textarea id="noteText" style="width: 100%; height: 60px; width: 100%; box-sizing: border-box; margin-top:10px;" placeholder="伝言板..."></textarea>
-        <button id="saveNoteBtn" style="width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; margin-top: 10px;">保存</button>
+        <select id="roomSelect" style="width: 100%; padding: 10px; margin-bottom: 10px"><option value="none">予約なし</option><option value="A">和室A</option><option value="B・C">和室B＋C</option><option value="A・B・C">和室A＋B＋C</option></select>
+        <textarea id="noteText" style="width: 100%; height: 60px; box-sizing: border-box;" placeholder="メモ..."></textarea>
+        <button id="saveNoteBtn" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; margin-top: 10px;">保存</button>
       </div>
     </div>
 
@@ -145,40 +121,70 @@
       let month = new Date().getMonth();
       let notesByDate = {};
 
-      // --- 和歌ランダム表示 ---
-      async function displayRandomWaka() {
-        const textElem = document.getElementById("poemText");
-        const authorElem = document.getElementById("poemAuthor");
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/waka`);
-          const data = await res.json();
-          if (data.wakas && data.wakas.length > 0) {
-            const selected = data.wakas[Math.floor(Math.random() * data.wakas.length)];
-            textElem.textContent = `「${selected.text}」`;
-            authorElem.textContent = `― ${selected.author}`;
-          } else {
-            setFallbackWaka(textElem, authorElem);
+      // --- 掲示板(トーク)機能 ---
+      async function fetchBbs() {
+        const res = await fetch(`${API_BASE_URL}/api/bbs`);
+        const data = await res.json();
+        const list = document.getElementById("bbsList");
+        if (!data.posts || data.posts.length === 0) {
+          list.innerHTML = "<p style='text-align:center; color:#999;'>投稿がありません</p>";
+          return;
+        }
+        list.innerHTML = data.posts.map(p => {
+          let fileHtml = "";
+          if (p.fileUrl) {
+            const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(p.fileUrl);
+            fileHtml = isImg 
+              ? `<img src="${p.fileUrl}" class="bbs-file" onclick="window.open(this.src)">`
+              : `<a href="${p.fileUrl}" target="_blank" class="file-link">📂 添付ファイルを表示</a>`;
           }
-        } catch (e) { setFallbackWaka(textElem, authorElem); }
+          return `
+            <div class="bbs-post">
+              <div class="bbs-meta"><strong>${p.author}</strong> <span>${new Date(p.createdAt).toLocaleString()}</span></div>
+              <div class="bbs-text">${p.text}</div>
+              ${fileHtml}
+            </div>
+          `;
+        }).join("");
+        list.scrollTop = list.scrollHeight;
       }
 
-      function setFallbackWaka(t, a) {
-        t.textContent = "「ちはやぶる 神代もきかず 竜田川 からくれなゐに 水くくるとは」";
-        a.textContent = "― 在原業平朝臣";
+      async function postBbs() {
+        const text = document.getElementById("bbsInput").value.trim();
+        const fileBtn = document.getElementById("fileInput");
+        if (!currentUser) return alert("入室してください");
+        if (!text && !fileBtn.files[0]) return;
+
+        const formData = new FormData();
+        formData.append("author", currentUser);
+        formData.append("text", text);
+        if (fileBtn.files[0]) formData.append("file", fileBtn.files[0]);
+
+        await fetch(`${API_BASE_URL}/api/bbs`, { method: "POST", body: formData });
+        
+        document.getElementById("bbsInput").value = "";
+        fileBtn.value = "";
+        document.getElementById("fileNameDisplay").textContent = "";
+        fetchBbs();
       }
 
-      // --- カレンダー・予約管理 ---
+      // ファイル選択時に名前を表示
+      document.getElementById("fileInput").onchange = (e) => {
+        const name = e.target.files[0]?.name || "";
+        document.getElementById("fileNameDisplay").textContent = name ? `📎 ${name}` : "";
+      };
+
+      // --- カレンダー・予約 (略) ---
       async function fetchNotes() {
         const res = await fetch(`${API_BASE_URL}/api/notes-by-month?year=${year}&month=${month + 1}`);
         const data = await res.json();
         notesByDate = {};
-        if (data.notes) data.notes.forEach((n) => (notesByDate[n.date] = n));
+        if (data.notes) data.notes.forEach(n => notesByDate[n.date] = n);
       }
-
       function renderCalendar() {
         const cal = document.getElementById("calendar");
         cal.innerHTML = "";
-        ["日", "月", "火", "水", "木", "金", "土"].forEach((d) => { cal.innerHTML += `<div class="dayName">${d}</div>`; });
+        ["日", "月", "火", "水", "木", "金", "土"].forEach(d => cal.innerHTML += `<div class="dayName">${d}</div>`);
         const first = new Date(year, month, 1).getDay();
         const last = new Date(year, month + 1, 0).getDate();
         for (let i = 0; i < first; i++) cal.innerHTML += `<div class="dateBtn inactive"></div>`;
@@ -190,18 +196,18 @@
           if (year === new Date().getFullYear() && month === new Date().getMonth() && d === new Date().getDate()) btn.classList.add("today");
           let roomHtml = "";
           if (note?.room && note.room !== "none") {
-            let labelClass = "room-label-text " + (note.room === "A" ? "room-A" : note.room === "B・C" ? "room-BC" : "room-ABC");
-            roomHtml = `<div class="${labelClass}">${note.room}</div>`;
+            const cls = note.room === "A" ? "room-A" : (note.room === "B・C" ? "room-BC" : "room-ABC");
+            roomHtml = `<div class="room-label-text ${cls}">${note.room}</div>`;
           }
-          btn.innerHTML = `<span class="date-num">${d}</span>${roomHtml}`;
+          btn.innerHTML = `<span>${d}</span>${roomHtml}`;
           btn.onclick = () => showDetail(d);
           cal.appendChild(btn);
         }
         document.getElementById("monthYear").textContent = `${year}年 ${month + 1}月`;
       }
-
       async function showDetail(day) {
         document.getElementById("calendarView").style.display = "none";
+        document.getElementById("bbsArea").style.display = "none";
         document.getElementById("timeslots").style.display = "block";
         const dateKey = `${year}-${month + 1}-${day}`;
         document.getElementById("selectedDate").textContent = `${month + 1}月${day}日`;
@@ -213,113 +219,38 @@
           const res = await fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`);
           const data = await res.json();
           const joined = data.participants?.includes(currentUser);
-          html += `<div class="slot-item"><div><strong>${s}</strong><br><small>${data.participants?.join(", ") || ""}</small></div>
-            <button class="${joined ? 'joined' : ''}" onclick="toggleJoin('${dateKey}', '${s}')">${joined ? '取消' : '参加'}</button></div>`;
+          html += `<div class="slot-item"><div><strong>${s}</strong><br><small>${data.participants?.join(", ") || ""}</small></div><button class="${joined ? 'joined' : ''}" onclick="toggleJoin('${dateKey}', '${s}')">${joined ? '取消' : '参加'}</button></div>`;
         }
         container.innerHTML = html;
+        const note = notesByDate[dateKey];
+        document.getElementById("roomSelect").value = note?.room || "none";
+        document.getElementById("noteText").value = note?.text || "";
         document.getElementById("saveNoteBtn").onclick = async () => {
-          await fetch(`${API_BASE_URL}/api/notes`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ date: dateKey, room: document.getElementById("roomSelect").value, text: document.getElementById("noteText").value }),
-          });
+          await fetch(`${API_BASE_URL}/api/notes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date: dateKey, room: document.getElementById("roomSelect").value, text: document.getElementById("noteText").value }) });
           location.reload();
         };
       }
-
       async function toggleJoin(date, slot) {
         if (!currentUser) return alert("入室してください");
-        await fetch(`${API_BASE_URL}/api/participate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ date, timeSlot: slot, userName: currentUser }),
-        });
+        await fetch(`${API_BASE_URL}/api/participate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, timeSlot: slot, userName: currentUser }) });
         showDetail(date.split("-")[2]);
       }
 
-      // --- 和歌：管理（編集・削除）機能 ---
-      function switchWakaTab(tab) {
-        document.getElementById("wakaPostForm").style.display = tab === 'post' ? 'block' : 'none';
-        document.getElementById("wakaManageList").style.display = tab === 'manage' ? 'block' : 'none';
-        document.getElementById("tabPost").classList.toggle('active', tab === 'post');
-        document.getElementById("tabManage").classList.toggle('active', tab === 'manage');
-        if (tab === 'manage') loadMyWakas();
-      }
-
-      async function loadMyWakas() {
-        const container = document.getElementById("myWakaContainer");
-        container.innerHTML = "詠み込み中...";
-        const res = await fetch(`${API_BASE_URL}/api/my-waka?userId=${encodeURIComponent(currentUser)}`);
-        const data = await res.json();
-        
-        if (!data.wakas || data.wakas.length === 0) {
-          container.innerHTML = "まだ投稿がありません。";
-          return;
+      function init() {
+        if (currentUser) {
+          document.getElementById("loginArea").style.display = "none";
+          document.getElementById("loggedInUser").style.display = "block";
+          document.getElementById("loginStatus").textContent = `門下生: ${currentUser}`;
         }
-
-        container.innerHTML = data.wakas.map(w => `
-          <div style="border-bottom: 1px solid #ddd; padding: 15px 0;">
-            <div id="waka-text-${w._id}" style="font-family: serif; font-size: 1.1rem;">${w.text}</div>
-            <div style="text-align: right; margin-top: 8px; font-size: 0.8rem;">
-              <span style="color: #007bff; cursor: pointer; margin-right: 15px;" onclick="editWaka('${w._id}')">推敲（編集）</span>
-              <span style="color: #dc3545; cursor: pointer;" onclick="deleteWaka('${w._id}')">削除</span>
-            </div>
-          </div>
-        `).join("");
+        document.getElementById("loginBtn").onclick = () => { const val = document.getElementById("userNameInput").value; if(val){localStorage.setItem("userName", val); location.reload();} };
+        document.getElementById("logoutBtn").onclick = () => { localStorage.removeItem("userName"); location.reload(); };
+        document.getElementById("backBtn").onclick = () => location.reload();
+        document.getElementById("postBbsBtn").onclick = postBbs;
+        document.getElementById("prevMonth").onclick = () => { month--; if(month<0){month=11; year--;} fetchNotes().then(renderCalendar); };
+        document.getElementById("nextMonth").onclick = () => { month++; if(month>11){month=0; year++;} fetchNotes().then(renderCalendar); };
+        fetchBbs(); fetchNotes().then(renderCalendar);
       }
-
-      async function editWaka(id) {
-        const oldText = document.getElementById(`waka-text-${id}`).textContent;
-        const newText = prompt("和歌を推敲してください：", oldText);
-        if (!newText || newText === oldText) return;
-        
-        await fetch(`${API_BASE_URL}/api/waka/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: newText })
-        });
-        loadMyWakas();
-      }
-
-      async function deleteWaka(id) {
-        if (!confirm("この和歌を削除しますか？")) return;
-        await fetch(`${API_BASE_URL}/api/waka/${id}`, { method: "DELETE" });
-        loadMyWakas();
-      }
-
-      async function displayRandomWaka() {
-  const textElem = document.getElementById("poemText");
-  const authorElem = document.getElementById("poemAuthor");
-
-  try {
-    // 1. 全員の和歌を取得
-    const res = await fetch(`${API_BASE_URL}/api/waka`);
-    const data = await res.json();
-    
-    // 2. データが存在するか（wakas配列に中身があるか）チェック
-    if (data.wakas && data.wakas.length > 0) {
-      // ランダムに1つ選ぶ
-      const randomIndex = Math.floor(Math.random() * data.wakas.length);
-      const selected = data.wakas[randomIndex];
-      
-      // 3. タイトルエリアの文字を上書き
-      textElem.textContent = `「${selected.text}」`;
-      authorElem.textContent = `― ${selected.author}`;
-    } else {
-      // 歌が一つもない場合はデフォルトを表示
-      setFallbackWaka(textElem, authorElem);
-    }
-  } catch (e) {
-    console.error("和歌の取得に失敗しました:", e);
-    setFallbackWaka(textElem, authorElem);
-  }
-}
-
-// 予備の表示用関数
-function setFallbackWaka(t, a) {
-  t.textContent = "「ちはやぶる 神代もきかず 竜田川 からくれなゐに 水くくるとは」";
-  a.textContent = "― 在原業平朝臣";
-}
+      init();
     </script>
   </body>
 </html>
