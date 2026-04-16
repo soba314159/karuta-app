@@ -468,6 +468,14 @@
     console.error("和歌の読み込みに失敗しました", e);
   }
 }
+      function init() {
+  // ページが読み込まれた瞬間に和歌を取得して表示する
+  displayRandomWaka(); 
+
+  // --- 既存のコード（ログイン処理など） ---
+  if (currentUser) {
+    document.getElementById("loginArea").style.display = "none";
+    // ...
     </script>
   </body>
 </html>
