@@ -29,6 +29,7 @@
         align-items: center;
       }
 
+      /* 和歌エリア（変数の受け皿） */
       #poemArea {
         width: 100%;
         max-width: 600px;
@@ -38,6 +39,7 @@
         margin-bottom: 15px;
         text-align: center;
         box-sizing: border-box;
+        min-height: 80px;
       }
 
       .container, #battleView, #timeslots {
@@ -60,33 +62,22 @@
         font-size: 14px;
       }
 
-      #calendar {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 5px;
-      }
-
+      /* カレンダー関連 */
+      #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
       .dayName { text-align: center; font-weight: bold; color: var(--primary-color); font-size: 12px; }
-
-      .dateBtn {
-        aspect-ratio: 5/7; background: #fff; border: 1px solid #ddd;
-        display: flex; flex-direction: column; justify-content: space-between;
-        align-items: center; padding: 6px 2px; cursor: pointer; transition: 0.2s;
-      }
-
+      .dateBtn { aspect-ratio: 5/7; background: #fff; border: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 2px; cursor: pointer; transition: 0.2s; }
       .dateBtn.today { border: 2px solid var(--accent-color); background: #fffcf0; }
       .dateBtn.inactive { opacity: 0.3; background: transparent; pointer-events: none; }
-
       .room-label-text { width: 100%; font-size: 11px; font-weight: bold; text-align: center; padding: 2px 0; border-radius: 2px; }
       .room-A { background: #e3f2fd; color: #0d47a1; }
       .room-BC { background: #fffde7; color: #f57f17; }
       .room-ABC { background: #ffebee; color: #b71c1c; }
+      .joined { background: var(--primary-color) !important; color: white !important; }
 
-      .slot-item { border-bottom: 1px dashed #ccc; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+      /* タブ・ボタン */
       .tab-header { display: flex; gap: 5px; margin-bottom: 20px; }
       .tab-btn { flex: 1; padding: 10px; border: 1px solid var(--accent-color); background: white; font-weight: bold; cursor: pointer; }
       .tab-btn.active { background: var(--accent-color); color: white; }
-      .joined { background: var(--primary-color) !important; color: white !important; }
     </style>
   </head>
 
@@ -102,8 +93,10 @@
       </div>
     </div>
 
-   <div id="poemArea">
-  <div id="poemText"></div> <div id="poemAuthor" style="text-align: right; font-size: 0.8rem; margin-top: 5px"></div> </div>
+    <div id="poemArea">
+      <div id="poemText">「詠みを読み込んでおります...」</div>
+      <div id="poemAuthor" style="text-align: right; font-size: 0.8rem; margin-top: 5px"></div>
+    </div>
 
     <div class="container" id="calendarView">
       <h2 style="text-align: center; margin-bottom: 15px">練習日和</h2>
@@ -140,7 +133,7 @@
       <div id="slotContainer"></div>
       <div style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-top: 20px;">
         <select id="roomSelect" style="width: 100%; padding: 10px;"><option value="none">予約なし</option><option value="A">和室A</option><option value="B・C">和室B＋C</option><option value="A・B・C">和室A＋B＋C</option></select>
-        <textarea id="noteText" style="width: 100%; height: 60px; margin-top:10px;" placeholder="伝言板..."></textarea>
+        <textarea id="noteText" style="width: 100%; height: 60px; width: 100%; box-sizing: border-box; margin-top:10px;" placeholder="伝言板..."></textarea>
         <button id="saveNoteBtn" style="width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; margin-top: 10px;">保存</button>
       </div>
     </div>
@@ -152,18 +145,29 @@
       let month = new Date().getMonth();
       let notesByDate = {};
 
+      // --- 和歌ランダム表示 ---
       async function displayRandomWaka() {
+        const textElem = document.getElementById("poemText");
+        const authorElem = document.getElementById("poemAuthor");
         try {
           const res = await fetch(`${API_BASE_URL}/api/waka`);
           const data = await res.json();
           if (data.wakas && data.wakas.length > 0) {
             const selected = data.wakas[Math.floor(Math.random() * data.wakas.length)];
-            document.getElementById("poemText").textContent = `「${selected.text}」`;
-            document.getElementById("poemAuthor").textContent = `― ${selected.author}`;
+            textElem.textContent = `「${selected.text}」`;
+            authorElem.textContent = `― ${selected.author}`;
+          } else {
+            setFallbackWaka(textElem, authorElem);
           }
-        } catch (e) { console.log("Default waka displayed"); }
+        } catch (e) { setFallbackWaka(textElem, authorElem); }
       }
 
+      function setFallbackWaka(t, a) {
+        t.textContent = "「ちはやぶる 神代もきかず 竜田川 からくれなゐに 水くくるとは」";
+        a.textContent = "― 在原業平朝臣";
+      }
+
+      // --- カレンダー・予約管理 ---
       async function fetchNotes() {
         const res = await fetch(`${API_BASE_URL}/api/notes-by-month?year=${year}&month=${month + 1}`);
         const data = await res.json();
@@ -189,7 +193,7 @@
             let labelClass = "room-label-text " + (note.room === "A" ? "room-A" : note.room === "B・C" ? "room-BC" : "room-ABC");
             roomHtml = `<div class="${labelClass}">${note.room}</div>`;
           }
-          btn.innerHTML = `<span>${d}</span>${roomHtml}`;
+          btn.innerHTML = `<span class="date-num">${d}</span>${roomHtml}`;
           btn.onclick = () => showDetail(d);
           cal.appendChild(btn);
         }
@@ -201,9 +205,9 @@
         document.getElementById("timeslots").style.display = "block";
         const dateKey = `${year}-${month + 1}-${day}`;
         document.getElementById("selectedDate").textContent = `${month + 1}月${day}日`;
-        const slots = ["9:00～10:30", "10:45～12:00", "13:15～14:30", "14:45～16:00", "16:30～17:15", "17:30～19:00"];
         const container = document.getElementById("slotContainer");
         container.innerHTML = "読込中...";
+        const slots = ["9:00～10:30", "10:45～12:00", "13:15～14:30", "14:45～16:00", "16:30～17:15", "17:30～19:00"];
         let html = "";
         for (const s of slots) {
           const res = await fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`);
@@ -233,17 +237,54 @@
         showDetail(date.split("-")[2]);
       }
 
+      // --- 和歌：管理（編集・削除）機能 ---
       function switchWakaTab(tab) {
         document.getElementById("wakaPostForm").style.display = tab === 'post' ? 'block' : 'none';
         document.getElementById("wakaManageList").style.display = tab === 'manage' ? 'block' : 'none';
+        document.getElementById("tabPost").classList.toggle('active', tab === 'post');
+        document.getElementById("tabManage").classList.toggle('active', tab === 'manage');
         if (tab === 'manage') loadMyWakas();
       }
 
       async function loadMyWakas() {
         const container = document.getElementById("myWakaContainer");
+        container.innerHTML = "詠み込み中...";
         const res = await fetch(`${API_BASE_URL}/api/my-waka?userId=${encodeURIComponent(currentUser)}`);
         const data = await res.json();
-        container.innerHTML = data.wakas?.map(w => `<div style="border-bottom:1px solid #ddd; padding:10px;">${w.text}<br><small>❤️ ${w.likes}</small></div>`).join("") || "投稿なし";
+        
+        if (!data.wakas || data.wakas.length === 0) {
+          container.innerHTML = "まだ投稿がありません。";
+          return;
+        }
+
+        container.innerHTML = data.wakas.map(w => `
+          <div style="border-bottom: 1px solid #ddd; padding: 15px 0;">
+            <div id="waka-text-${w._id}" style="font-family: serif; font-size: 1.1rem;">${w.text}</div>
+            <div style="text-align: right; margin-top: 8px; font-size: 0.8rem;">
+              <span style="color: #007bff; cursor: pointer; margin-right: 15px;" onclick="editWaka('${w._id}')">推敲（編集）</span>
+              <span style="color: #dc3545; cursor: pointer;" onclick="deleteWaka('${w._id}')">削除</span>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      async function editWaka(id) {
+        const oldText = document.getElementById(`waka-text-${id}`).textContent;
+        const newText = prompt("和歌を推敲してください：", oldText);
+        if (!newText || newText === oldText) return;
+        
+        await fetch(`${API_BASE_URL}/api/waka/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: newText })
+        });
+        loadMyWakas();
+      }
+
+      async function deleteWaka(id) {
+        if (!confirm("この和歌を削除しますか？")) return;
+        await fetch(`${API_BASE_URL}/api/waka/${id}`, { method: "DELETE" });
+        loadMyWakas();
       }
 
       function init() {
@@ -261,53 +302,17 @@
         document.getElementById("saveWakaBtn").onclick = async () => {
           const text = document.getElementById("wakaInput").value;
           const author = document.getElementById("wakaAuthorInput").value || "匿名";
-          await fetch(`${API_BASE_URL}/api/waka`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ text, author, userId: currentUser })
-          });
+          if(!text) return alert("歌を詠んでください");
+          await fetch(`${API_BASE_URL}/api/waka`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ text, author, userId: currentUser }) });
           alert("奉納しました");
-          location.reload();
+          document.getElementById("wakaInput").value = "";
+          switchWakaTab('manage');
         };
+        document.getElementById("prevMonth").onclick = () => { month--; if(month<0){month=11; year--;} fetchNotes().then(renderCalendar); };
+        document.getElementById("nextMonth").onclick = () => { month++; if(month>11){month=0; year++;} fetchNotes().then(renderCalendar); };
         fetchNotes().then(renderCalendar);
       }
       init();
-
-      async function displayRandomWaka() {
-  const textElem = document.getElementById("poemText");
-  const authorElem = document.getElementById("poemAuthor");
-
-  // 1. まずは初期表示（または読み込み中の演出）
-  textElem.textContent = "「……詠を読み込んでいます……」";
-
-  try {
-    // 2. サーバーにデータを取りに行く（タイムアウト設定を考慮）
-    const res = await fetch(`${API_BASE_URL}/api/waka`);
-    if (!res.ok) throw new Error("Network response was not ok");
-    
-    const data = await res.json();
-
-    if (data.wakas && data.wakas.length > 0) {
-      // 3. データがあれば、ランダムに選んで箱（変数）に代入
-      const selected = data.wakas[Math.floor(Math.random() * data.wakas.length)];
-      textElem.textContent = `「${selected.text}」`;
-      authorElem.textContent = `― ${selected.author}`;
-    } else {
-      // 4. データが空なら「ちはやぶる」を代入
-      showDefaultWaka(textElem, authorElem);
-    }
-  } catch (e) {
-    // 5. 通信エラー（ずっと読み込み中になる原因）が起きたら「ちはやぶる」を表示
-    console.error("和歌の取得に失敗しました:", e);
-    showDefaultWaka(textElem, authorElem);
-  }
-}
-
-// 共通のデフォルト表示用関数
-function showDefaultWaka(t, a) {
-  t.textContent = "「ちはやぶる 神代もきかず 竜田川 からくれなゐに 水くくるとは」";
-  a.textContent = "― 在原業平朝臣";
-}
     </script>
   </body>
 </html>
