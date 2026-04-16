@@ -450,6 +450,24 @@
 
       init();
       fetchNotes().then(renderCalendar);
+      async function displayRandomWaka() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/waka`); // 全ての和歌を取得
+    const data = await res.json();
+    
+    if (data.wakas && data.wakas.length > 0) {
+      // ランダムに1つ選ぶ
+      const randomIndex = Math.floor(Math.random() * data.wakas.length);
+      const selectedWaka = data.wakas[randomIndex];
+      
+      // 表示を書き換える
+      document.getElementById("poemText").textContent = `「${selectedWaka.text}」`;
+      document.getElementById("poemAuthor").textContent = `― ${selectedWaka.author}`;
+    }
+  } catch (e) {
+    console.error("和歌の読み込みに失敗しました", e);
+  }
+}
     </script>
   </body>
 </html>
