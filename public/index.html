@@ -103,9 +103,7 @@
     </div>
 
    <div id="poemArea">
-  <div id="poemText">「……詠み込み中……」</div>
-  <div id="poemAuthor" style="text-align: right; font-size: 0.8rem; margin-top: 5px"></div>
-</div>
+  <div id="poemText"></div> <div id="poemAuthor" style="text-align: right; font-size: 0.8rem; margin-top: 5px"></div> </div>
 
     <div class="container" id="calendarView">
       <h2 style="text-align: center; margin-bottom: 15px">練習日和</h2>
@@ -274,6 +272,42 @@
         fetchNotes().then(renderCalendar);
       }
       init();
+
+      async function displayRandomWaka() {
+  const textElem = document.getElementById("poemText");
+  const authorElem = document.getElementById("poemAuthor");
+
+  // 1. まずは初期表示（または読み込み中の演出）
+  textElem.textContent = "「……詠を読み込んでいます……」";
+
+  try {
+    // 2. サーバーにデータを取りに行く（タイムアウト設定を考慮）
+    const res = await fetch(`${API_BASE_URL}/api/waka`);
+    if (!res.ok) throw new Error("Network response was not ok");
+    
+    const data = await res.json();
+
+    if (data.wakas && data.wakas.length > 0) {
+      // 3. データがあれば、ランダムに選んで箱（変数）に代入
+      const selected = data.wakas[Math.floor(Math.random() * data.wakas.length)];
+      textElem.textContent = `「${selected.text}」`;
+      authorElem.textContent = `― ${selected.author}`;
+    } else {
+      // 4. データが空なら「ちはやぶる」を代入
+      showDefaultWaka(textElem, authorElem);
+    }
+  } catch (e) {
+    // 5. 通信エラー（ずっと読み込み中になる原因）が起きたら「ちはやぶる」を表示
+    console.error("和歌の取得に失敗しました:", e);
+    showDefaultWaka(textElem, authorElem);
+  }
+}
+
+// 共通のデフォルト表示用関数
+function showDefaultWaka(t, a) {
+  t.textContent = "「ちはやぶる 神代もきかず 竜田川 からくれなゐに 水くくるとは」";
+  a.textContent = "― 在原業平朝臣";
+}
     </script>
   </body>
 </html>
