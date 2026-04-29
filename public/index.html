@@ -3,254 +3,219 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>競技かるた 練習管理 - 詠の庭 -</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&family=Noto+Serif+JP:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
-
+    <title>練習管理</title>
     <style>
-      :root {
-        --primary-color: #8b0000;
-        --accent-color: #d4af37;
-        --bg-washi: #f5f5f0;
-        --text-sumi: #1a1a1a;
-      }
-
-      body {
-        font-family: "Sawarabi Mincho", "Noto Serif JP", serif;
-        background-color: var(--bg-washi);
-        background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
-        color: var(--text-sumi);
-        margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center;
-      }
-
-      .container, #timeslots {
-        width: 100%; max-width: 600px; background: rgba(255, 255, 255, 0.9);
-        padding: 20px; border: 1px solid #ccc; box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px; box-sizing: border-box;
-      }
-
-      #userSection { width: 100%; max-width: 600px; display: flex; justify-content: flex-end; margin-bottom: 10px; font-size: 14px; }
-
-      /* 掲示板（トーク風スタイル） */
-      #bbsArea { width: 100%; max-width: 600px; background: white; border: 1px solid var(--accent-color); padding: 15px; margin-bottom: 20px; box-sizing: border-box; }
-      #bbsList { max-height: 400px; overflow-y: auto; margin-bottom: 15px; border-bottom: 1px solid #eee; }
-      
-      .bbs-post { margin-bottom: 15px; padding: 10px; border-radius: 8px; background: #f9f9f9; }
-      .bbs-meta { font-size: 0.75rem; color: #666; margin-bottom: 5px; display: flex; justify-content: space-between; }
-      .bbs-text { word-wrap: break-word; line-height: 1.5; }
-      .bbs-file { margin-top: 8px; max-width: 100%; border-radius: 4px; border: 1px solid #ddd; }
-      .file-link { font-size: 0.85rem; color: var(--primary-color); text-decoration: none; display: block; margin-top: 5px; }
-
-      /* 入力エリア */
-      #bbsForm { display: flex; flex-direction: column; gap: 8px; }
-      .form-row { display: flex; gap: 5px; }
-      #bbsInput { flex: 1; height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: none; }
-      #fileInput { display: none; }
-      .file-label { padding: 10px; background: #eee; cursor: pointer; border-radius: 4px; font-size: 1.2rem; }
+      :root { --primary: #8b0000; --bg: #f5f5f0; }
+      body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+      .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+      #userSection { width: 100%; max-width: 500px; text-align: right; margin-bottom: 10px; font-size: 14px; }
 
       /* カレンダー */
       #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-      .dayName { text-align: center; font-weight: bold; color: var(--primary-color); font-size: 12px; }
-      .dateBtn { aspect-ratio: 5/7; background: #fff; border: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 2px; cursor: pointer; }
-      .dateBtn.today { border: 2px solid var(--accent-color); background: #fffcf0; }
-      .room-label-text { width: 100%; font-size: 10px; font-weight: bold; text-align: center; padding: 2px 0; border-radius: 2px; }
-      .room-A { background: #e3f2fd; color: #0d47a1; }
-      .room-BC { background: #fffde7; color: #f57f17; }
-      .room-ABC { background: #ffebee; color: #b71c1c; }
-      
-      button { font-family: inherit; cursor: pointer; }
-      .joined { background: var(--primary-color) !important; color: white !important; }
-      .slot-item { border-bottom: 1px dashed #ccc; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+      .dayName { text-align: center; font-weight: bold; color: var(--primary); font-size: 12px; }
+      .dateBtn { 
+        aspect-ratio: 5/7; 
+        background: #fff; border: 1px solid #ddd; 
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+        cursor: pointer; padding-top: 5px; overflow: hidden;
+      }
+      .date-num { font-weight: bold; font-size: 16px; }
+      .room-label { 
+        font-size: 10px; width: 100%; text-align: center; 
+        margin-top: 5px; padding: 2px 0; background: #e3f2fd; color: #0d47a1; 
+      }
+      .dateBtn.today { border: 2px solid #d4af37; background: #fffcf0; }
+      .dateBtn.past { opacity: 0.3; background: #eee; pointer-events: none; }
+
+      /* リスト表示 */
+      .slot-box { border-bottom: 1px solid #eee; padding: 12px 0; }
+      .slot-title { font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+      .participant-list { list-style: none; padding: 0; margin: 5px 0 0 10px; }
+      .participant-list li { font-size: 15px; margin: 3px 0; }
+      .participant-list li::before { content: "・"; color: var(--primary); }
+
+      /* 入力欄 */
+      .admin-note { background: #fff9f9; padding: 15px; border-top: 2px solid var(--primary); margin-top: 20px; }
+      textarea, select { width: 100%; padding: 8px; margin: 5px 0 10px; border: 1px solid #ccc; box-sizing: border-box; }
+
+      button { cursor: pointer; }
+      .join-btn { padding: 5px 12px; background: #fff; border: 1px solid var(--primary); color: var(--primary); border-radius: 4px; font-size: 13px; }
+      .join-btn.active { background: var(--primary); color: #fff; }
+      .save-btn { width: 100%; padding: 10px; background: var(--primary); color: #fff; border: none; font-weight: bold; }
+      .back-link { color: var(--primary); cursor: pointer; margin-bottom: 15px; display: inline-block; }
     </style>
   </head>
 
   <body>
     <div id="userSection">
       <div id="loginArea">
-        <input id="userNameInput" placeholder="御名前" style="width: 80px;" />
-        <button id="loginBtn">入室</button>
+        <input id="userNameInput" placeholder="名前" style="width:70px">
+        <button onclick="login()">入室</button>
       </div>
-      <div id="loggedInUser" style="display: none">
-        <span id="loginStatus"></span>
-        <button id="logoutBtn" style="margin-left: 10px">退室</button>
-      </div>
-    </div>
-
-    <div id="bbsArea">
-      <h3 style="margin: 0 0 10px 0; color: var(--primary-color);">💬 稽古場トーク</h3>
-      <div id="bbsList">読込中...</div>
-      
-      <div id="bbsForm">
-        <div class="form-row">
-          <label for="fileInput" class="file-label" title="ファイルを添付">📎</label>
-          <input type="file" id="fileInput" />
-          <textarea id="bbsInput" placeholder="メッセージを入力..."></textarea>
-        </div>
-        <div id="fileNameDisplay" style="font-size: 0.8rem; color: #666;"></div>
-        <button id="postBbsBtn" style="background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold;">送信</button>
+      <div id="loggedInUser" style="display:none">
+        <span id="userNameDisplay"></span>
+        <button onclick="logout()">退室</button>
       </div>
     </div>
 
     <div class="container" id="calendarView">
-      <h2 style="text-align: center;">練習カレンダー</h2>
-      <div style="display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center;">
-        <button id="prevMonth">前月</button>
-        <span id="monthYear" style="font-weight: bold;"></span>
-        <button id="nextMonth">次月</button>
-      </div>
+      <h3 style="text-align:center" id="monthYear"></h3>
       <div id="calendar"></div>
     </div>
 
-    <div id="timeslots" style="display: none">
-      <button id="backBtn">← 戻る</button>
-      <h2 id="selectedDate" style="text-align: center"></h2>
-      <div id="slotContainer"></div>
-      <div style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-top: 20px;">
-        <select id="roomSelect" style="width: 100%; padding: 10px; margin-bottom: 10px"><option value="none">予約なし</option><option value="A">和室A</option><option value="B・C">和室B＋C</option><option value="A・B・C">和室A＋B＋C</option></select>
-        <textarea id="noteText" style="width: 100%; height: 60px; box-sizing: border-box;" placeholder="メモ..."></textarea>
-        <button id="saveNoteBtn" style="width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; margin-top: 10px;">保存</button>
+    <div class="container" id="detailView" style="display:none">
+      <span class="back-link" onclick="location.reload()">← カレンダーに戻る</span>
+      <h2 id="selectedDateText" style="margin:0 0 15px;"></h2>
+
+      <div id="slotList"></div>
+
+      <div class="admin-note">
+        <label>🏠 部屋指定</label>
+        <select id="roomSelect">
+          <option value="">未設定</option>
+          <option value="和室A">和室A</option>
+          <option value="和室B・C">和室B・C</option>
+          <option value="和室A・B・C">和室A・B・C</option>
+        </select>
+
+        <label>💬 連絡事項</label>
+        <textarea id="noteText" rows="3" placeholder="持ち物など"></textarea>
+
+        <button class="save-btn" id="saveAdminBtn">保存して更新</button>
       </div>
     </div>
 
     <script>
       const API_BASE_URL = window.location.origin;
-      let currentUser = localStorage.getItem("userName") || null;
-      let year = new Date().getFullYear();
-      let month = new Date().getMonth();
-      let notesByDate = {};
+      let currentUser = localStorage.getItem("userName");
 
-      // --- 掲示板(トーク)機能 ---
-      async function fetchBbs() {
-        const res = await fetch(`${API_BASE_URL}/api/bbs`);
-        const data = await res.json();
-        const list = document.getElementById("bbsList");
-        if (!data.posts || data.posts.length === 0) {
-          list.innerHTML = "<p style='text-align:center; color:#999;'>投稿がありません</p>";
-          return;
+      // 【時間帯表記への変更】
+      const slots = [
+        "9:00～10:30", 
+        "10:45～12:00", 
+        "13:15～14:30", 
+        "14:45～16:00", 
+        "16:30～17:15", 
+        "17:30～19:00"
+      ];
+
+      function login() {
+        const val = document.getElementById("userNameInput").value.trim();
+        if(val) { localStorage.setItem("userName", val); location.reload(); }
+      }
+      function logout() { localStorage.removeItem("userName"); location.reload(); }
+
+      async function renderCalendar() {
+        if(currentUser) {
+          document.getElementById("loginArea").style.display = "none";
+          document.getElementById("loggedInUser").style.display = "block";
+          document.getElementById("userNameDisplay").textContent = currentUser;
         }
-        list.innerHTML = data.posts.map(p => {
-          let fileHtml = "";
-          if (p.fileUrl) {
-            const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(p.fileUrl);
-            fileHtml = isImg 
-              ? `<img src="${p.fileUrl}" class="bbs-file" onclick="window.open(this.src)">`
-              : `<a href="${p.fileUrl}" target="_blank" class="file-link">📂 添付ファイルを表示</a>`;
-          }
-          return `
-            <div class="bbs-post">
-              <div class="bbs-meta"><strong>${p.author}</strong> <span>${new Date(p.createdAt).toLocaleString()}</span></div>
-              <div class="bbs-text">${p.text}</div>
-              ${fileHtml}
-            </div>
-          `;
-        }).join("");
-        list.scrollTop = list.scrollHeight;
-      }
 
-      async function postBbs() {
-        const text = document.getElementById("bbsInput").value.trim();
-        const fileBtn = document.getElementById("fileInput");
-        if (!currentUser) return alert("入室してください");
-        if (!text && !fileBtn.files[0]) return;
+        const now = new Date();
+        const y = now.getFullYear(), m = now.getMonth() + 1;
+        document.getElementById("monthYear").textContent = `${y}年 ${m}月`;
 
-        const formData = new FormData();
-        formData.append("author", currentUser);
-        formData.append("text", text);
-        if (fileBtn.files[0]) formData.append("file", fileBtn.files[0]);
-
-        await fetch(`${API_BASE_URL}/api/bbs`, { method: "POST", body: formData });
-        
-        document.getElementById("bbsInput").value = "";
-        fileBtn.value = "";
-        document.getElementById("fileNameDisplay").textContent = "";
-        fetchBbs();
-      }
-
-      // ファイル選択時に名前を表示
-      document.getElementById("fileInput").onchange = (e) => {
-        const name = e.target.files[0]?.name || "";
-        document.getElementById("fileNameDisplay").textContent = name ? `📎 ${name}` : "";
-      };
-
-      // --- カレンダー・予約 (略) ---
-      async function fetchNotes() {
-        const res = await fetch(`${API_BASE_URL}/api/notes-by-month?year=${year}&month=${month + 1}`);
+        const res = await fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`);
         const data = await res.json();
-        notesByDate = {};
-        if (data.notes) data.notes.forEach(n => notesByDate[n.date] = n);
-      }
-      function renderCalendar() {
+        const notesMap = {};
+        if(data.notes) data.notes.forEach(n => notesMap[n.date] = n.room);
+
         const cal = document.getElementById("calendar");
         cal.innerHTML = "";
         ["日", "月", "火", "水", "木", "金", "土"].forEach(d => cal.innerHTML += `<div class="dayName">${d}</div>`);
-        const first = new Date(year, month, 1).getDay();
-        const last = new Date(year, month + 1, 0).getDate();
-        for (let i = 0; i < first; i++) cal.innerHTML += `<div class="dateBtn inactive"></div>`;
+
+        const first = new Date(y, m - 1, 1).getDay();
+        const last = new Date(y, m, 0).getDate();
+        const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
+
+        for (let i = 0; i < first; i++) cal.innerHTML += `<div></div>`;
         for (let d = 1; d <= last; d++) {
-          const dateKey = `${year}-${month + 1}-${d}`;
-          const note = notesByDate[dateKey];
-          const btn = document.createElement("button");
+          const dateKey = `${y}-${m}-${d}`;
+          const cur = new Date(y, m - 1, d);
+          const btn = document.createElement("div");
           btn.className = "dateBtn";
-          if (year === new Date().getFullYear() && month === new Date().getMonth() && d === new Date().getDate()) btn.classList.add("today");
+
           let roomHtml = "";
-          if (note?.room && note.room !== "none") {
-            const cls = note.room === "A" ? "room-A" : (note.room === "B・C" ? "room-BC" : "room-ABC");
-            roomHtml = `<div class="room-label-text ${cls}">${note.room}</div>`;
+          if(notesMap[dateKey]) {
+            roomHtml = `<div class="room-label">${notesMap[dateKey]}</div>`;
           }
-          btn.innerHTML = `<span>${d}</span>${roomHtml}`;
-          btn.onclick = () => showDetail(d);
+
+          btn.innerHTML = `<span class="date-num">${d}</span>${roomHtml}`;
+
+          if (cur < oneWeekAgo.setHours(0,0,0,0)) btn.classList.add("past");
+          else {
+            if (cur.toDateString() === now.toDateString()) btn.classList.add("today");
+            btn.onclick = () => showDetail(y, m, d);
+          }
           cal.appendChild(btn);
         }
-        document.getElementById("monthYear").textContent = `${year}年 ${month + 1}月`;
       }
-      async function showDetail(day) {
+
+      async function showDetail(y, m, d) {
         document.getElementById("calendarView").style.display = "none";
-        document.getElementById("bbsArea").style.display = "none";
-        document.getElementById("timeslots").style.display = "block";
-        const dateKey = `${year}-${month + 1}-${day}`;
-        document.getElementById("selectedDate").textContent = `${month + 1}月${day}日`;
-        const container = document.getElementById("slotContainer");
-        container.innerHTML = "読込中...";
-        const slots = ["9:00～10:30", "10:45～12:00", "13:15～14:30", "14:45～16:00", "16:30～17:15", "17:30～19:00"];
-        let html = "";
-        for (const s of slots) {
-          const res = await fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`);
-          const data = await res.json();
-          const joined = data.participants?.includes(currentUser);
-          html += `<div class="slot-item"><div><strong>${s}</strong><br><small>${data.participants?.join(", ") || ""}</small></div><button class="${joined ? 'joined' : ''}" onclick="toggleJoin('${dateKey}', '${s}')">${joined ? '取消' : '参加'}</button></div>`;
-        }
-        container.innerHTML = html;
-        const note = notesByDate[dateKey];
-        document.getElementById("roomSelect").value = note?.room || "none";
-        document.getElementById("noteText").value = note?.text || "";
-        document.getElementById("saveNoteBtn").onclick = async () => {
-          await fetch(`${API_BASE_URL}/api/notes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date: dateKey, room: document.getElementById("roomSelect").value, text: document.getElementById("noteText").value }) });
+        document.getElementById("detailView").style.display = "block";
+        const dateKey = `${y}-${m}-${d}`;
+        document.getElementById("selectedDateText").textContent = `${m}/${d} 参加一覧`;
+
+        const listDiv = document.getElementById("slotList");
+        listDiv.innerHTML = "読み込み中...";
+
+        const fetchTasks = slots.map(s => 
+          fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`).then(r => r.json())
+        );
+        const fetchNote = fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`).then(r => r.json());
+
+        const [results, noteData] = await Promise.all([Promise.all(fetchTasks), fetchNote]);
+
+        listDiv.innerHTML = results.map((data, i) => {
+          const members = data.participants || [];
+          const isJoined = members.includes(currentUser);
+          return `
+            <div class="slot-box">
+              <div class="slot-title">
+                <span>${slots[i]} (${members.length}名)</span>
+                <button class="join-btn ${isJoined ? 'active' : ''}" onclick="toggleJoin('${dateKey}','${slots[i]}')">
+                  ${isJoined ? '取消' : '参加'}
+                </button>
+              </div>
+              <ul class="participant-list">
+                ${members.length > 0 ? members.map(n => `<li>${n}</li>`).join('') : '<li>なし</li>'}
+              </ul>
+            </div>`;
+        }).join('');
+
+        const todayNote = noteData.notes?.find(n => n.date === dateKey);
+        document.getElementById("roomSelect").value = todayNote?.room || "";
+        document.getElementById("noteText").value = todayNote?.text || "";
+
+        document.getElementById("saveAdminBtn").onclick = async () => {
+          await fetch(`${API_BASE_URL}/api/notes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              date: dateKey, 
+              room: document.getElementById("roomSelect").value, 
+              text: document.getElementById("noteText").value 
+            }),
+          });
+          alert("保存しました");
           location.reload();
         };
       }
+
       async function toggleJoin(date, slot) {
-        if (!currentUser) return alert("入室してください");
-        await fetch(`${API_BASE_URL}/api/participate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, timeSlot: slot, userName: currentUser }) });
-        showDetail(date.split("-")[2]);
+        if(!currentUser) return alert("入室してください");
+        await fetch(`${API_BASE_URL}/api/participate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date, timeSlot: slot, userName: currentUser }),
+        });
+        const p = date.split("-");
+        showDetail(p[0], p[1], p[2]);
       }
 
-      function init() {
-        if (currentUser) {
-          document.getElementById("loginArea").style.display = "none";
-          document.getElementById("loggedInUser").style.display = "block";
-          document.getElementById("loginStatus").textContent = `門下生: ${currentUser}`;
-        }
-        document.getElementById("loginBtn").onclick = () => { const val = document.getElementById("userNameInput").value; if(val){localStorage.setItem("userName", val); location.reload();} };
-        document.getElementById("logoutBtn").onclick = () => { localStorage.removeItem("userName"); location.reload(); };
-        document.getElementById("backBtn").onclick = () => location.reload();
-        document.getElementById("postBbsBtn").onclick = postBbs;
-        document.getElementById("prevMonth").onclick = () => { month--; if(month<0){month=11; year--;} fetchNotes().then(renderCalendar); };
-        document.getElementById("nextMonth").onclick = () => { month++; if(month>11){month=0; year++;} fetchNotes().then(renderCalendar); };
-        fetchBbs(); fetchNotes().then(renderCalendar);
-      }
-      init();
+      renderCalendar();
     </script>
   </body>
 </html>
