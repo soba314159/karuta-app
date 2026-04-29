@@ -8,49 +8,41 @@
       :root { --primary: #8b0000; --bg: #f5f5f0; --accent: #d4af37; }
       body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
       .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
-      
-      /* ユーザー情報 */
       #userSection { width: 100%; max-width: 500px; text-align: right; margin-bottom: 10px; font-size: 14px; }
       
-      /* カレンダー */
+      /* カレンダー表示 */
       #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-      .dayName { text-align: center; font-weight: bold; color: var(--primary); font-size: 12px; padding-bottom: 5px; }
+      .dayName { text-align: center; font-weight: bold; color: var(--primary); font-size: 12px; }
       .dateBtn { 
         aspect-ratio: 5/7; background: #fff; border: 1px solid #ddd; 
         display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
         cursor: pointer; padding-top: 5px; overflow: hidden;
       }
       .date-num { font-weight: bold; font-size: 16px; }
-      .room-label { 
-        font-size: 9px; width: 100%; text-align: center; 
-        margin-top: auto; padding: 2px 0; background: #e3f2fd; color: #0d47a1; font-weight: bold;
-      }
+      .room-label { font-size: 9px; width: 100%; text-align: center; margin-top: auto; padding: 2px 0; background: #e3f2fd; color: #0d47a1; font-weight: bold; }
       .dateBtn.today { border: 2px solid var(--accent); background: #fffcf0; }
       .dateBtn.past { opacity: 0.3; background: #eee; pointer-events: none; }
 
-      /* 参加者リスト（箇条書き） */
-      .slot-box { border-bottom: 1px solid #eee; padding: 12px 0; }
-      .slot-title { font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-      .participant-list { list-style: none; padding: 0; margin: 8px 0 0 10px; }
-      .participant-list li { font-size: 15px; margin: 4px 0; }
-      .participant-list li::before { content: "・"; color: var(--primary); font-weight: bold; }
+      /* 参加者リスト（箇条書きスタイル） */
+      .slot-box { border-bottom: 1px solid #eee; padding: 15px 0; }
+      .slot-title { font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+      .participant-list { list-style: none; padding: 0; margin: 10px 0 0 15px; }
+      .participant-list li { font-size: 16px; margin: 6px 0; position: relative; }
+      .participant-list li::before { content: "●"; color: #333; font-size: 8px; position: absolute; left: -15px; top: 6px; }
 
       /* 管理フォーム */
       .admin-note { background: #fff9f9; padding: 15px; border-top: 2px solid var(--primary); margin-top: 20px; }
       textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-      
-      button { cursor: pointer; }
+      .save-btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; font-weight: bold; border-radius: 4px; }
       .join-btn { padding: 6px 14px; background: #fff; border: 1px solid var(--primary); color: var(--primary); border-radius: 4px; font-size: 13px; }
       .join-btn.active { background: var(--primary); color: #fff; }
-      .save-btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; font-weight: bold; border-radius: 4px; }
-      .back-link { color: var(--primary); cursor: pointer; margin-bottom: 15px; display: inline-block; }
+      .back-link { color: var(--primary); cursor: pointer; margin-bottom: 15px; display: inline-block; text-decoration: underline; }
     </style>
   </head>
-
   <body>
     <div id="userSection">
       <div id="loginArea">
-        <input id="userNameInput" placeholder="名前" style="width:70px">
+        <input id="userNameInput" placeholder="お名前" style="width:80px">
         <button onclick="login()">入室</button>
       </div>
       <div id="loggedInUser" style="display:none">
@@ -60,13 +52,13 @@
     </div>
 
     <div class="container" id="calendarView">
-      <h3 style="text-align:center; margin-top:0;" id="monthYear"></h3>
+      <h3 id="monthYear" style="text-align:center; margin-top:0;"></h3>
       <div id="calendar"></div>
     </div>
 
     <div class="container" id="detailView" style="display:none">
-      <span class="back-link" onclick="location.reload()">← 戻る</span>
-      <h2 id="selectedDateText" style="margin:0 0 15px;"></h2>
+      <span class="back-link" onclick="location.reload()">← カレンダーに戻る</span>
+      <h2 id="selectedDateText" style="margin:0 0 15px; font-size: 18px;"></h2>
       <div id="slotList"></div>
       <div class="admin-note">
         <label>🏠 部屋指定</label>
@@ -77,8 +69,8 @@
           <option value="和室A・B・C">和室A・B・C</option>
         </select>
         <label>💬 連絡事項</label>
-        <textarea id="noteText" rows="3" placeholder="持ち物など"></textarea>
-        <button class="save-btn" id="saveAdminBtn">情報を保存</button>
+        <textarea id="noteText" rows="3"></textarea>
+        <button class="save-btn" id="saveAdminBtn">この日の情報を保存</button>
       </div>
     </div>
 
@@ -99,89 +91,83 @@
           document.getElementById("loggedInUser").style.display = "block";
           document.getElementById("userNameDisplay").textContent = currentUser;
         }
-
         const now = new Date();
         const y = now.getFullYear(), m = now.getMonth() + 1;
         document.getElementById("monthYear").textContent = `${y}年 ${m}月`;
 
-        // 部屋情報の一括取得
-        const res = await fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`);
-        const data = await res.json();
-        const notesMap = {};
-        if(data.notes) data.notes.forEach(n => notesMap[n.date] = n.room);
+        // エラー回避のためtry-catch追加
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`);
+          const data = await res.json();
+          const notesMap = {};
+          if(data.notes) data.notes.forEach(n => notesMap[n.date] = n.room);
 
-        const cal = document.getElementById("calendar");
-        cal.innerHTML = "";
-        ["日", "月", "火", "水", "木", "金", "土"].forEach(d => cal.innerHTML += `<div class="dayName">${d}</div>`);
+          const cal = document.getElementById("calendar");
+          cal.innerHTML = "";
+          ["日", "月", "火", "水", "木", "金", "土"].forEach(d => cal.innerHTML += `<div class="dayName">${d}</div>`);
 
-        const first = new Date(y, m - 1, 1).getDay();
-        const last = new Date(y, m, 0).getDate();
-        const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
-
-        for (let i = 0; i < first; i++) cal.innerHTML += `<div></div>`;
-        for (let d = 1; d <= last; d++) {
-          const dateKey = `${y}-${m}-${d}`;
-          const btn = document.createElement("div");
-          btn.className = "dateBtn";
-          const roomHtml = notesMap[dateKey] ? `<div class="room-label">${notesMap[dateKey]}</div>` : "";
-          btn.innerHTML = `<span class="date-num">${d}</span>${roomHtml}`;
-
-          const cur = new Date(y, m - 1, d);
-          if (cur < oneWeekAgo.setHours(0,0,0,0)) btn.classList.add("past");
-          else {
-            if (cur.toDateString() === now.toDateString()) btn.classList.add("today");
+          const first = new Date(y, m - 1, 1).getDay();
+          const last = new Date(y, m, 0).getDate();
+          for (let i = 0; i < first; i++) cal.innerHTML += `<div></div>`;
+          for (let d = 1; d <= last; d++) {
+            const dateKey = `${y}-${m}-${d}`;
+            const btn = document.createElement("div");
+            btn.className = "dateBtn";
+            if (dateKey === `${y}-${m}-${now.getDate()}`) btn.classList.add("today");
+            btn.innerHTML = `<span class="date-num">${d}</span>${notesMap[dateKey] ? `<div class="room-label">${notesMap[dateKey]}</div>` : ""}`;
             btn.onclick = () => showDetail(y, m, d);
+            cal.appendChild(btn);
           }
-          cal.appendChild(btn);
-        }
+        } catch (e) { console.error("Calendar load error"); }
       }
 
       async function showDetail(y, m, d) {
         document.getElementById("calendarView").style.display = "none";
         document.getElementById("detailView").style.display = "block";
         const dateKey = `${y}-${m}-${d}`;
-        document.getElementById("selectedDateText").textContent = `${m}/${d} 参加一覧`;
-        
+        document.getElementById("selectedDateText").textContent = `${m}月${d}日 参加状況`;
+
         const listDiv = document.getElementById("slotList");
-        listDiv.innerHTML = "読込中...";
+        listDiv.innerHTML = "読み込み中...";
 
-        const fetchTasks = slots.map(s => fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`).then(r => r.json()));
-        const fetchNote = fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`).then(r => r.json());
+        try {
+          const fetchTasks = slots.map(s => fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`).then(r => r.json()));
+          const fetchNote = fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`).then(r => r.json());
+          const [results, noteData] = await Promise.all([Promise.all(fetchTasks), fetchNote]);
 
-        const [results, noteData] = await Promise.all([Promise.all(fetchTasks), fetchNote]);
+          listDiv.innerHTML = results.map((data, i) => {
+            const members = data.participants || [];
+            const isJoined = members.includes(currentUser);
+            return `
+              <div class="slot-box">
+                <div class="slot-title">
+                  <span>${slots[i]} (${members.length}名)</span>
+                  <button class="join-btn ${isJoined ? 'active' : ''}" onclick="toggleJoin('${dateKey}','${slots[i]}')">${isJoined ? '取消' : '参加'}</button>
+                </div>
+                <ul class="participant-list">
+                  ${members.length > 0 ? members.map(n => `<li>${n}</li>`).join('') : '<li style="list-style:none; color:#999; margin:0;">なし</li>'}
+                </ul>
+              </div>`;
+          }).join('');
 
-        listDiv.innerHTML = results.map((data, i) => {
-          const members = data.participants || [];
-          const isJoined = members.includes(currentUser);
-          return `
-            <div class="slot-box">
-              <div class="slot-title">
-                <span>${slots[i]} (${members.length}名)</span>
-                <button class="join-btn ${isJoined ? 'active' : ''}" onclick="toggleJoin('${dateKey}','${slots[i]}')">${isJoined ? '取消' : '参加'}</button>
-              </div>
-              <ul class="participant-list">
-                ${members.length > 0 ? members.map(n => `<li>${n}</li>`).join('') : '<li style="list-style:none; color:#999;">なし</li>'}
-              </ul>
-            </div>`;
-        }).join('');
+          const todayNote = noteData.notes?.find(n => n.date === dateKey);
+          document.getElementById("roomSelect").value = todayNote?.room || "";
+          document.getElementById("noteText").value = todayNote?.text || "";
 
-        const todayNote = noteData.notes?.find(n => n.date === dateKey);
-        document.getElementById("roomSelect").value = todayNote?.room || "";
-        document.getElementById("noteText").value = todayNote?.text || "";
-
-        document.getElementById("saveAdminBtn").onclick = async () => {
-          await fetch(`${API_BASE_URL}/api/notes`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ date: dateKey, room: document.getElementById("roomSelect").value, text: document.getElementById("noteText").value }),
-          });
-          alert("保存しました");
-          location.reload();
-        };
+          document.getElementById("saveAdminBtn").onclick = async () => {
+            await fetch(`${API_BASE_URL}/api/notes`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ date: dateKey, room: document.getElementById("roomSelect").value, text: document.getElementById("noteText").value }),
+            });
+            alert("保存しました");
+            location.reload();
+          };
+        } catch (e) { listDiv.innerHTML = "データ取得エラー"; }
       }
 
       async function toggleJoin(date, slot) {
-        if(!currentUser) return alert("お名前を登録してください");
+        if(!currentUser) return alert("お名前を入力して入室してください");
         await fetch(`${API_BASE_URL}/api/participate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
