@@ -8,7 +8,6 @@ app.use(express.json());
 app.use(cors());
 
 // --- MongoDB接続設定 ---
-// あなたの接続文字列を使用
 const uri = "mongodb+srv://sobaji888:w2dNPlMj1A2ujHf0@cluster0.hubxmhg.mongodb.net/karuta?retryWrites=true&w=majority&ssl=true&serverSelectionTimeoutMS=5000";
 
 mongoose.connect(uri)
@@ -16,22 +15,19 @@ mongoose.connect(uri)
   .catch((err) => console.error("接続エラー:", err));
 
 // --- モデルの定義 ---
-
-// 1. 参加状況（日付と時間枠ごとの名前リスト）
 const ParticipationSchema = new mongoose.Schema({
   date: { type: String, required: true },
   timeSlot: { type: String, required: true },
   participants: [String]
 });
-// 複合インデックスで検索を高速化
 ParticipationSchema.index({ date: 1, timeSlot: 1 }, { unique: true });
 const Participation = mongoose.models.Participation || mongoose.model("Participation", ParticipationSchema);
 
-// 2. メモ・部屋情報
 const NoteSchema = new mongoose.Schema({
   date: { type: String, required: true, unique: true },
   room: { type: String, default: "" },
-  text: { type: String, default: "" }
+  text: { type: String, default: "" },
+  color: { type: String, default: "#ffffff" }
 });
 const Note = mongoose.models.Note || mongoose.model("Note", NoteSchema);
 
@@ -51,21 +47,16 @@ app.get('/api/participants', async (req, res) => {
   }
 });
 
-// 参加・取消（トグル処理）
+// 参加・取消
 app.post('/api/participate', async (req, res) => {
   const { date, timeSlot, userName } = req.body;
   try {
     let record = await Participation.findOne({ date, timeSlot });
-    if (!record) {
-      record = new Participation({ date, timeSlot, participants: [] });
-    }
+    if (!record) record = new Participation({ date, timeSlot, participants: [] });
 
     const index = record.participants.indexOf(userName);
-    if (index > -1) {
-      record.participants.splice(index, 1); // すでにいれば削除
-    } else {
-      record.participants.push(userName);   // いなければ追加
-    }
+    if (index > -1) record.participants.splice(index, 1);
+    else record.participants.push(userName);
 
     await record.save();
     res.json({ success: true });
@@ -78,7 +69,6 @@ app.post('/api/participate', async (req, res) => {
 app.get('/api/notes-by-month', async (req, res) => {
   const { year, month } = req.query;
   try {
-    // 前方一致で指定年月のデータを検索 (例: "2026-4-")
     const regex = new RegExp(`^${year}-${month}-`);
     const notes = await Note.find({ date: { $regex: regex } });
     res.json({ notes });
@@ -87,14 +77,14 @@ app.get('/api/notes-by-month', async (req, res) => {
   }
 });
 
-// メモ・部屋情報の保存
+// メモ保存
 app.post('/api/notes', async (req, res) => {
-  const { date, room, text } = req.body;
+  const { date, room, text, color } = req.body;
   try {
     const note = await Note.findOneAndUpdate(
       { date },
-      { room, text },
-      { new: true, upsert: true } // なければ作成、あれば更新
+      { room, text, color },
+      { new: true, upsert: true }
     );
     res.json({ success: true, note });
   } catch (err) {
@@ -102,6 +92,5 @@ app.post('/api/notes', async (req, res) => {
   }
 });
 
-// ポート設定
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
