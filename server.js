@@ -15,14 +15,18 @@ mongoose.connect(uri)
   .catch((err) => console.error("接続エラー:", err));
 
 // --- モデルの定義 ---
+
+// 1. 参加状況（日付・時間枠ごとの参加者リスト）
 const ParticipationSchema = new mongoose.Schema({
   date: { type: String, required: true },
   timeSlot: { type: String, required: true },
   participants: [String]
 });
+// 検索を速くし、重複を防ぐ設定
 ParticipationSchema.index({ date: 1, timeSlot: 1 }, { unique: true });
 const Participation = mongoose.models.Participation || mongoose.model("Participation", ParticipationSchema);
 
+// 2. メモ・部屋情報
 const NoteSchema = new mongoose.Schema({
   date: { type: String, required: true, unique: true },
   room: { type: String, default: "" },
@@ -47,16 +51,21 @@ app.get('/api/participants', async (req, res) => {
   }
 });
 
-// 参加・取消
+// 参加・取消（トグル処理）
 app.post('/api/participate', async (req, res) => {
   const { date, timeSlot, userName } = req.body;
   try {
     let record = await Participation.findOne({ date, timeSlot });
-    if (!record) record = new Participation({ date, timeSlot, participants: [] });
+    if (!record) {
+      record = new Participation({ date, timeSlot, participants: [] });
+    }
 
     const index = record.participants.indexOf(userName);
-    if (index > -1) record.participants.splice(index, 1);
-    else record.participants.push(userName);
+    if (index > -1) {
+      record.participants.splice(index, 1); // すでにいれば削除
+    } else {
+      record.participants.push(userName);   // いなければ追加
+    }
 
     await record.save();
     res.json({ success: true });
@@ -77,7 +86,7 @@ app.get('/api/notes-by-month', async (req, res) => {
   }
 });
 
-// メモ保存
+// メモ・部屋情報の保存
 app.post('/api/notes', async (req, res) => {
   const { date, room, text, color } = req.body;
   try {
@@ -92,5 +101,6 @@ app.post('/api/notes', async (req, res) => {
   }
 });
 
+// ポート設定（Render用）
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
