@@ -8,11 +8,12 @@
       :root { --primary: #8b0000; --bg: #f5f5f0; --accent: #d4af37; }
       body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
       .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+      
       #userSection { width: 100%; max-width: 500px; text-align: right; margin-bottom: 10px; font-size: 14px; }
       
-      /* カレンダーヘッダー */
+      /* カレンダーヘッダー（切り替えボタン） */
       .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-      .nav-btn { cursor: pointer; padding: 5px 12px; background: #eee; border: 1px solid #ccc; border-radius: 4px; }
+      .nav-btn { cursor: pointer; padding: 6px 12px; background: #eee; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
       
       #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
       .dayName { text-align: center; font-weight: bold; color: var(--primary); font-size: 12px; }
@@ -25,11 +26,11 @@
       .room-label { font-size: 9px; width: 100%; text-align: center; margin-top: auto; padding: 2px 0; background: #e3f2fd; color: #0d47a1; font-weight: bold; }
       .dateBtn.today { border: 2px solid var(--accent); background: #fffcf0; }
 
-      /* 参加者リスト（箇条書き） */
+      /* 参加者リストの装飾 */
       .slot-box { border-bottom: 1px solid #eee; padding: 15px 0; }
       .slot-title { font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
       .participant-list { list-style: none; padding: 0; margin: 10px 0 0 15px; }
-      .participant-list li { font-size: 16px; margin: 6px 0; position: relative; }
+      .participant-list li { font-size: 16px; margin: 8px 0; position: relative; color: #111; }
       .participant-list li::before { content: "●"; font-size: 10px; position: absolute; left: -20px; top: 2px; color: #333; }
 
       .admin-note { background: #fff9f9; padding: 15px; border-top: 2px solid var(--primary); margin-top: 20px; }
@@ -62,9 +63,11 @@
     </div>
 
     <div class="container" id="detailView" style="display:none">
-      <span class="back-link" onclick="location.reload()">← 戻る</span>
-      <h2 id="selectedDateText"></h2>
+      <span class="back-link" onclick="location.reload()">← カレンダーに戻る</span>
+      <h2 id="selectedDateText" style="margin:0 0 15px;"></h2>
+      
       <div id="slotList"></div>
+
       <div class="admin-note">
         <label>🏠 部屋指定</label>
         <select id="roomSelect">
@@ -75,7 +78,7 @@
         </select>
         <label>💬 連絡事項</label>
         <textarea id="noteText" rows="2"></textarea>
-        <button class="save-btn" id="saveAdminBtn">保存</button>
+        <button class="save-btn" id="saveAdminBtn">この日の情報を保存</button>
       </div>
     </div>
 
@@ -83,6 +86,8 @@
       const API_BASE_URL = window.location.origin;
       let currentUser = localStorage.getItem("userName");
       const slots = ["9:00～10:30", "10:45～12:00", "13:15～14:30", "14:45～16:00", "16:30～17:15", "17:30～19:00"];
+      
+      // 現在表示している年月を管理
       let viewDate = new Date();
 
       function login() {
@@ -90,7 +95,7 @@
         if(val) { localStorage.setItem("userName", val); location.reload(); }
       }
       function logout() { localStorage.removeItem("userName"); location.reload(); }
-      
+
       function changeMonth(diff) {
         viewDate.setMonth(viewDate.getMonth() + diff);
         renderCalendar();
@@ -117,6 +122,7 @@
 
           const first = new Date(y, m - 1, 1).getDay();
           const last = new Date(y, m, 0).getDate();
+          
           const today = new Date();
           const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 
@@ -126,6 +132,7 @@
             const btn = document.createElement("div");
             btn.className = "dateBtn";
             if (dateKey === todayKey) btn.classList.add("today");
+            
             btn.innerHTML = `<span class="date-num">${d}</span>${notesMap[dateKey] ? `<div class="room-label">${notesMap[dateKey]}</div>` : ""}`;
             btn.onclick = () => showDetail(y, m, d);
             cal.appendChild(btn);
@@ -143,6 +150,7 @@
         listDiv.innerHTML = "読み込み中...";
 
         try {
+          // 全時間枠の参加者データを取得
           const fetchTasks = slots.map(s => fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`).then(r => r.json()));
           const fetchNote = fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`).then(r => r.json());
           const [results, noteData] = await Promise.all([Promise.all(fetchTasks), fetchNote]);
@@ -170,12 +178,17 @@
             await fetch(`${API_BASE_URL}/api/notes`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ date: dateKey, room: document.getElementById("roomSelect").value, text: document.getElementById("noteText").value, color: "#ffffff" }),
+              body: JSON.stringify({ 
+                date: dateKey, 
+                room: document.getElementById("roomSelect").value, 
+                text: document.getElementById("noteText").value,
+                color: "#ffffff"
+              }),
             });
             alert("保存しました");
-            renderCalendar(); // カレンダーの部屋ラベルを即時更新
+            renderCalendar(); 
           };
-        } catch (e) { listDiv.innerHTML = "通信エラー"; }
+        } catch (e) { listDiv.innerHTML = "通信エラーが発生しました"; }
       }
 
       async function toggleJoin(date, slot) {
