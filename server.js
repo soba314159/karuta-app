@@ -35,6 +35,16 @@ const NoteSchema = new mongoose.Schema({
 });
 const Note = mongoose.models.Note || mongoose.model("Note", NoteSchema);
 
+// 3. メンバー情報（名前ごとの段位・プレート装飾）
+const RANKS = ["", "A", "B", "C", "D", "E"];
+const FLAIRS = ["", "gold", "rainbow", "glitch", "sakura", "sumi"];
+const MemberSchema = new mongoose.Schema({
+  name: { type: String, required: true, unique: true },
+  rank: { type: String, enum: RANKS, default: "" },
+  flair: { type: String, enum: FLAIRS, default: "" }
+});
+const Member = mongoose.models.Member || mongoose.model("Member", MemberSchema);
+
 // --- 静的ファイル配信 ---
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -96,6 +106,43 @@ app.post('/api/notes', async (req, res) => {
       { new: true, upsert: true }
     );
     res.json({ success: true, note });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// メンバー一覧取得（段位・装飾）
+app.get('/api/members', async (req, res) => {
+  try {
+    const members = await Member.find({}, { _id: 0, name: 1, rank: 1, flair: 1 });
+    res.json({ members });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 段位・装飾の保存（送られてきた項目だけ更新）
+app.post('/api/members', async (req, res) => {
+  const { userName, rank, flair } = req.body;
+  if (typeof userName !== "string" || !userName.trim()) {
+    return res.status(400).json({ success: false, error: "userNameが必要です" });
+  }
+  const update = {};
+  if (rank !== undefined) {
+    if (!RANKS.includes(rank)) return res.status(400).json({ success: false, error: "段位が不正です" });
+    update.rank = rank;
+  }
+  if (flair !== undefined) {
+    if (!FLAIRS.includes(flair)) return res.status(400).json({ success: false, error: "装飾が不正です" });
+    update.flair = flair;
+  }
+  try {
+    const member = await Member.findOneAndUpdate(
+      { name: userName.trim() },
+      { $set: update },
+      { new: true, upsert: true }
+    );
+    res.json({ success: true, member: { name: member.name, rank: member.rank, flair: member.flair } });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

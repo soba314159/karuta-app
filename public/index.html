@@ -33,6 +33,63 @@
       .participant-list li { font-size: 16px; margin: 8px 0; position: relative; color: #111; }
       .participant-list li::before { content: "●"; font-size: 10px; position: absolute; left: -20px; top: 2px; color: #333; }
 
+      /* ネームプレート（段位で背景色が変わる） */
+      .participant-list li.has-plate::before { content: none; }
+      .participant-list li.has-plate { margin-left: -15px; }
+      .plate {
+        display: inline-flex; align-items: center; gap: 8px; min-width: 120px;
+        padding: 6px 14px; border: 1px solid #bbb; border-radius: 4px;
+        font-weight: bold; letter-spacing: 0.05em; background: transparent; color: #111;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+      }
+      .rank-badge { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,0.85); color: #111; }
+      .plate.rank-A { background: #f4a6a0; border-color: #d9776f; }
+      .plate.rank-B { background: #fff3a0; border-color: #dcc85a; }
+      .plate.rank-C { background: #b5e0b7; border-color: #7dbb80; }
+      .plate.rank-D { background: #a9d2f7; border-color: #6fa8dc; }
+      .plate.rank-E { background: transparent; }
+      .plate.rank-E .rank-badge { border: 1px solid #bbb; }
+
+      /* 裏装飾 */
+      .plate.flair-gold {
+        background: linear-gradient(110deg, #b8860b 0%, #ffe082 30%, #fff8dc 45%, #ffd54f 60%, #b8860b 100%);
+        background-size: 250% 100%; border-color: #8d6e00; color: #3e2700;
+        animation: plateShine 2.5s linear infinite;
+      }
+      .plate.flair-rainbow {
+        background: linear-gradient(90deg, #ff5252, #ffb300, #ffee58, #66bb6a, #42a5f5, #ab47bc, #ff5252);
+        background-size: 300% 100%; border-color: #555; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        animation: plateShine 4s linear infinite;
+      }
+      .plate.flair-glitch {
+        background: #111; border-color: #0f0; color: #0f0; font-family: monospace;
+        animation: plateGlitch 1.2s steps(1) infinite;
+      }
+      .plate.flair-sakura { background: linear-gradient(135deg, #ffe4ec, #ffc1d6); border-color: #f48fb1; color: #7a1f44; }
+      .plate.flair-sakura::after { content: "🌸"; margin-left: auto; }
+      .plate.flair-sumi { background: #1c1c1c; border-color: #000; color: #f5f5f0; font-family: serif; letter-spacing: 0.2em; }
+      @keyframes plateShine { from { background-position: 250% 0; } to { background-position: 0 0; } }
+      @keyframes plateGlitch {
+        0%, 100% { transform: none; text-shadow: none; }
+        10% { transform: translate(-2px, 1px) skewX(-8deg); text-shadow: 2px 0 #f0f, -2px 0 #0ff; }
+        20% { transform: none; text-shadow: none; }
+        60% { transform: translate(2px, -1px); text-shadow: -2px 0 #f0f, 2px 0 #0ff; }
+        70% { transform: none; text-shadow: none; }
+      }
+      @media (prefers-reduced-motion: reduce) { .plate { animation: none !important; } }
+
+      #profileArea select { width: auto; padding: 3px 6px; margin: 0 0 0 4px; font-size: 13px; }
+      .petal { position: fixed; top: -40px; font-size: 22px; pointer-events: none; z-index: 1000; animation: petalFall linear forwards; }
+      @keyframes petalFall { to { transform: translateY(110vh) rotate(540deg); opacity: 0.2; } }
+      /* 裏テーマ「ちはやふる」 */
+      body.momiji { background: linear-gradient(180deg, #ffd0b8 0%, #fff1e0 60%, #ffe0cc 100%) fixed; }
+      body.momiji .container { border-top: 4px solid #b71c1c; }
+      body.momiji .dateBtn.today { background: #ffebe6; border-color: #b71c1c; }
+      #toast {
+        position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff;
+        padding: 10px 18px; border-radius: 20px; font-size: 14px; z-index: 1001; display: none; max-width: 90%; text-align: center;
+      }
+
       .admin-note { background: #fff9f9; padding: 15px; border-top: 2px solid var(--primary); margin-top: 20px; }
       textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
       .save-btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; font-weight: bold; border-radius: 4px; font-size: 16px; cursor: pointer; }
@@ -49,6 +106,24 @@
       </div>
       <div id="loggedInUser" style="display:none">
         <span id="userNameDisplay"></span>
+        <span id="profileArea">
+          <select id="rankSelect" onchange="saveProfile()" aria-label="段位">
+            <option value="">段位未設定</option>
+            <option value="A">A級</option>
+            <option value="B">B級</option>
+            <option value="C">C級</option>
+            <option value="D">D級</option>
+            <option value="E">E級</option>
+          </select>
+          <select id="flairSelect" onchange="saveProfile()" aria-label="裏装飾" style="display:none">
+            <option value="">裏装飾なし</option>
+            <option value="gold">名人（金）</option>
+            <option value="rainbow">永世（虹）</option>
+            <option value="glitch">バグ級</option>
+            <option value="sakura">桜</option>
+            <option value="sumi">墨</option>
+          </select>
+        </span>
         <button onclick="logout()">退室</button>
       </div>
     </div>
@@ -82,6 +157,8 @@
       </div>
     </div>
 
+    <div id="toast"></div>
+
     <script>
       const API_BASE_URL = window.location.origin;
       let currentUser = localStorage.getItem("userName");
@@ -90,13 +167,190 @@
       // 現在表示している年月を管理
       let viewDate = new Date();
 
+      // 段位・装飾（名前 → {rank, flair}）
+      const RANKS = ["A", "B", "C", "D", "E"];
+      const FLAIR_LABELS = { gold: "名人", rainbow: "永世", glitch: "ﾊﾞｸﾞ級", sakura: "桜", sumi: "墨" };
+      let membersMap = {};
+      const POEMS = [
+        "ちはやぶる 神代も聞かず 竜田川 からくれなゐに 水くくるとは（在原業平朝臣）",
+        "難波津に 咲くやこの花 冬ごもり 今は春べと 咲くやこの花（序歌）",
+        "秋の田の かりほの庵の 苫をあらみ わが衣手は 露にぬれつつ（天智天皇）",
+        "春過ぎて 夏来にけらし 白妙の 衣ほすてふ 天の香具山（持統天皇）",
+        "むらさめの 露もまだひぬ 槇の葉に 霧立ちのぼる 秋の夕暮れ（寂蓮法師）",
+        "住の江の 岸に寄る波 よるさへや 夢の通ひ路 人目よくらむ（藤原敏行朝臣）",
+        "めぐりあひて 見しやそれとも わかぬ間に 雲がくれにし 夜半の月かな（紫式部）",
+        "吹くからに 秋の草木の しをるれば むべ山風を 嵐といふらむ（文屋康秀）",
+        "さびしさに 宿を立ち出でて ながむれば いづこも同じ 秋の夕暮れ（良暹法師）",
+        "ほととぎす 鳴きつる方を ながむれば ただ有明の 月ぞ残れる（後徳大寺左大臣）",
+        "瀬をはやみ 岩にせかるる 滝川の われても末に 逢はむとぞ思ふ（崇徳院）",
+      ];
+      let secretMode = localStorage.getItem("secretMode") === "1";
+
+      function esc(str) {
+        return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      }
+
+      async function loadMembers() {
+        try {
+          const data = await fetch(`${API_BASE_URL}/api/members`).then(r => r.json());
+          membersMap = {};
+          (data.members || []).forEach(m => membersMap[m.name] = m);
+        } catch (e) { console.error(e); }
+      }
+
+      function plateHtml(name) {
+        const m = membersMap[name] || {};
+        const rank = RANKS.includes(m.rank) ? m.rank : "";
+        const flair = FLAIR_LABELS[m.flair] ? m.flair : "";
+        const badge = flair ? FLAIR_LABELS[flair] : (rank ? `${rank}級` : "");
+        return `<li class="has-plate"><span class="plate ${rank ? 'rank-' + rank : ''} ${flair ? 'flair-' + flair : ''}" data-name="${esc(name)}">${badge ? `<span class="rank-badge">${badge}</span>` : ''}${esc(name)}</span></li>`;
+      }
+
+      function syncProfileUI() {
+        const me = membersMap[currentUser] || {};
+        document.getElementById("rankSelect").value = me.rank || "";
+        const flairSel = document.getElementById("flairSelect");
+        flairSel.value = me.flair || "";
+        flairSel.style.display = secretMode ? "" : "none";
+      }
+
+      async function saveProfile() {
+        if(!currentUser) return;
+        const body = { userName: currentUser, rank: document.getElementById("rankSelect").value };
+        if(secretMode) body.flair = document.getElementById("flairSelect").value;
+        try {
+          const data = await fetch(`${API_BASE_URL}/api/members`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }).then(r => r.json());
+          if(!data.success) throw new Error(data.error);
+          membersMap[currentUser] = data.member;
+          document.querySelectorAll("#slotList .plate").forEach(el => {
+            if(el.dataset.name === currentUser) el.parentElement.outerHTML = plateHtml(currentUser);
+          });
+          showToast("段位を保存しました");
+        } catch (e) { showToast("保存に失敗しました"); syncProfileUI(); }
+      }
+
+      let toastTimer;
+      function showToast(msg, ms = 2500) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.style.display = "none", ms);
+      }
+
+      // --- 裏技 ---
+      function toggleSecretMode() {
+        secretMode = !secretMode;
+        localStorage.setItem("secretMode", secretMode ? "1" : "0");
+        syncProfileUI();
+        if(secretMode) petalRain();
+        showToast(secretMode ? "🎴 裏モード解禁：裏装飾が選べます" : "裏モードを閉じました");
+      }
+
+      function petalRain(chars = ["🌸", "🎴", "🍁"]) {
+        for (let i = 0; i < 36; i++) {
+          const p = document.createElement("span");
+          p.className = "petal";
+          p.textContent = chars[i % chars.length];
+          p.style.left = Math.random() * 100 + "vw";
+          p.style.animationDuration = 2.5 + Math.random() * 2.5 + "s";
+          p.style.animationDelay = Math.random() * 1.2 + "s";
+          p.addEventListener("animationend", () => p.remove());
+          document.body.appendChild(p);
+        }
+      }
+
+      function showPoem() {
+        showToast("📜 " + POEMS[Math.floor(Math.random() * POEMS.length)], 6000);
+      }
+
+      function toggleMomiji() {
+        const on = document.body.classList.toggle("momiji");
+        localStorage.setItem("momiji", on ? "1" : "0");
+        if(on) petalRain(["🍁", "🍂"]);
+        showToast(on ? "🍁 からくれなゐに 水くくるとは" : "紅葉テーマを閉じました");
+      }
+
+      // お手つき：マスとプレートが一瞬バラバラに崩れて戻る
+      function otetsuki() {
+        const els = document.querySelectorAll(".dateBtn, .plate, .nav-btn, .join-btn");
+        els.forEach(el => {
+          el.style.transition = "transform 0.35s cubic-bezier(.3,1.6,.5,1)";
+          el.style.transform = `translate(${(Math.random() - 0.5) * 30}px, ${Math.random() * 40}px) rotate(${(Math.random() - 0.5) * 50}deg)`;
+        });
+        showToast("💥 お手つき！");
+        setTimeout(() => els.forEach(el => el.style.transform = ""), 1300);
+        setTimeout(() => els.forEach(el => el.style.transition = ""), 1700);
+      }
+
+      // 名前欄に入れると入室せずに発動する合言葉
+      const SECRET_WORDS = {
+        "むすめふさほせ": toggleSecretMode,
+        "ちはやふる": toggleMomiji,
+        "おてつき": otetsuki,
+        "なにわづ": showPoem,
+      };
+
+      function initSecrets() {
+        if(localStorage.getItem("momiji") === "1") document.body.classList.add("momiji");
+
+        // 5月27日（百人一首の日）は開くだけで札吹雪
+        const now = new Date();
+        if(now.getMonth() === 4 && now.getDate() === 27 && !sessionStorage.getItem("hyakuninDay")) {
+          sessionStorage.setItem("hyakuninDay", "1");
+          petalRain();
+          showToast("🎴 今日は百人一首の日", 4000);
+        }
+
+        // 「○月○日 参加状況」の見出しをダブルタップ → 今日の一首
+        document.getElementById("selectedDateText").addEventListener("dblclick", showPoem);
+
+        // 月タイトルを3秒以内に7回連打 → 裏モード切替
+        let taps = [];
+        document.getElementById("monthYear").addEventListener("click", () => {
+          const now = Date.now();
+          taps = taps.filter(t => now - t < 3000);
+          taps.push(now);
+          if(taps.length >= 7) { taps = []; toggleSecretMode(); }
+        });
+
+        // コナミコマンド → 札吹雪
+        const konami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+        let pos = 0;
+        document.addEventListener("keydown", e => {
+          pos = (e.key === konami[pos]) ? pos + 1 : (e.key === konami[0] ? 1 : 0);
+          if(pos === konami.length) { pos = 0; petalRain(); }
+        });
+
+        // 自分のネームプレートを長押し → 札吹雪
+        let pressTimer;
+        const list = document.getElementById("slotList");
+        list.addEventListener("pointerdown", e => {
+          const plate = e.target.closest(".plate");
+          if(!plate || plate.dataset.name !== currentUser) return;
+          pressTimer = setTimeout(petalRain, 700);
+        });
+        ["pointerup", "pointerleave", "pointercancel"].forEach(ev => list.addEventListener(ev, () => clearTimeout(pressTimer)));
+        list.addEventListener("contextmenu", e => { if(e.target.closest(".plate")) e.preventDefault(); });
+      }
+
       function login() {
         const val = document.getElementById("userNameInput").value.trim();
+        // 名前欄に一字決まりを入力 → 入室せず裏モード切替
+        if(SECRET_WORDS[val]) { document.getElementById("userNameInput").value = ""; return SECRET_WORDS[val](); }
         if(val) { localStorage.setItem("userName", val); location.reload(); }
       }
       function logout() { localStorage.removeItem("userName"); location.reload(); }
 
+      const MONTH_COMBO = "--++-+-+";
+      let monthTaps = "";
       function changeMonth(diff) {
+        monthTaps = (monthTaps + (diff < 0 ? "-" : "+")).slice(-MONTH_COMBO.length);
+        if(monthTaps === MONTH_COMBO) { monthTaps = ""; petalRain(); showToast("🎴 札吹雪"); }
         viewDate.setMonth(viewDate.getMonth() + diff);
         renderCalendar();
       }
@@ -109,6 +363,8 @@
         }
         const y = viewDate.getFullYear(), m = viewDate.getMonth() + 1;
         document.getElementById("monthYear").textContent = `${y}年 ${m}月`;
+
+        loadMembers().then(syncProfileUI);
 
         try {
           const res = await fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`);
@@ -153,7 +409,8 @@
           // 全時間枠の参加者データを取得
           const fetchTasks = slots.map(s => fetch(`${API_BASE_URL}/api/participants?date=${dateKey}&timeSlot=${s}`).then(r => r.json()));
           const fetchNote = fetch(`${API_BASE_URL}/api/notes-by-month?year=${y}&month=${m}`).then(r => r.json());
-          const [results, noteData] = await Promise.all([Promise.all(fetchTasks), fetchNote]);
+          const [results, noteData] = await Promise.all([Promise.all(fetchTasks), fetchNote, loadMembers()]);
+          syncProfileUI();
 
           listDiv.innerHTML = results.map((data, i) => {
             const members = data.participants || [];
@@ -165,7 +422,7 @@
                   <button class="join-btn ${isJoined ? 'active' : ''}" onclick="toggleJoin('${dateKey}','${slots[i]}')">${isJoined ? '取消' : '参加'}</button>
                 </div>
                 <ul class="participant-list">
-                  ${members.length > 0 ? members.map(n => `<li>${n}</li>`).join('') : '<li>なし</li>'}
+                  ${members.length > 0 ? members.map(plateHtml).join('') : '<li>なし</li>'}
                 </ul>
               </div>`;
           }).join('');
@@ -202,6 +459,7 @@
         showDetail(p[0], p[1], p[2]);
       }
 
+      initSecrets();
       renderCalendar();
     </script>
   </body>
