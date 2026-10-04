@@ -5,48 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>練習管理システム</title>
     <style>
-      :root { --primary: #8b0000; --bg: #f5f5f0; --accent: #d4af37; }
-      body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-      .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
-      
-      #userSection { width: 100%; max-width: 500px; text-align: right; margin-bottom: 10px; font-size: 14px; }
-      
-      /* カレンダーヘッダー（切り替えボタン） */
-      .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-      .nav-btn { cursor: pointer; padding: 6px 12px; background: #eee; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
-      
-      #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-      .dayName { text-align: center; font-weight: bold; color: var(--primary); font-size: 12px; }
-      .dateBtn { 
-        aspect-ratio: 5/7; background: #fff; border: 1px solid #ddd; 
-        display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
-        cursor: pointer; padding-top: 5px;
+      :root {
+        --primary: #9c4a4a; --bg: #f8f6f1; --paper: #fdfcf9; --accent: #cdb672;
+        --ink: #4a443f; --soft: #9a928a; --line: #ece7df;
+        --serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
       }
-      .date-num { font-weight: bold; font-size: 16px; }
-      .room-label { font-size: 9px; width: 100%; text-align: center; margin-top: auto; padding: 2px 0; background: #e3f2fd; color: #0d47a1; font-weight: bold; }
-      .dateBtn.today { border: 2px solid var(--accent); background: #fffcf0; }
+      body {
+        font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; color: var(--ink);
+        background-color: var(--bg); margin: 0; padding: 12px 12px 40px;
+        display: flex; flex-direction: column; align-items: center;
+      }
+      .container {
+        width: 100%; max-width: 500px; background: #fff; padding: 20px; border-radius: 16px;
+        border: 1px solid var(--line); box-shadow: 0 4px 18px rgba(60, 40, 20, 0.06); box-sizing: border-box;
+      }
 
-      /* 参加者リストの装飾 */
-      .slot-box { border-bottom: 1px solid #eee; padding: 15px 0; }
-      .slot-title { font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
-      .participant-list { list-style: none; padding: 0; margin: 10px 0 0 15px; }
-      .participant-list li { font-size: 16px; margin: 8px 0; position: relative; color: #111; }
-      .participant-list li::before { content: "●"; font-size: 10px; position: absolute; left: -20px; top: 2px; color: #333; }
+      /* ヘッダー */
+      #userSection {
+        width: 100%; max-width: 500px; display: flex; align-items: center; justify-content: space-between;
+        gap: 8px; margin-bottom: 12px; font-size: 14px; flex-wrap: wrap;
+      }
+      .brand { display: flex; align-items: center; gap: 8px; }
+      .crest {
+        width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff;
+        display: inline-flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 17px;
+      }
+      .brand-name { font-family: var(--serif); font-weight: bold; font-size: 17px; letter-spacing: 0.12em; }
+      #loginArea, #loggedInUser { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+      #userNameInput { width: 110px; padding: 7px 10px; font-size: 16px; }
+      #userNameDisplay { font-weight: bold; }
+
+      /* カレンダー */
+      .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+      #monthYear { margin: 0; font-family: var(--serif); font-size: 20px; letter-spacing: 0.08em; user-select: none; -webkit-user-select: none; }
+      .nav-btn {
+        cursor: pointer; width: 40px; height: 40px; background: var(--paper); border: 1px solid var(--line);
+        border-radius: 50%; font-size: 22px; line-height: 1; color: var(--primary); font-family: inherit;
+      }
+      .nav-btn:active { background: var(--line); }
+
+      #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+      .dayName { text-align: center; font-size: 11px; color: var(--soft); padding-bottom: 2px; }
+      .dayName.sun, .dateBtn.sun .date-num { color: #c97b72; }
+      .dayName.sat, .dateBtn.sat .date-num { color: #6f97bd; }
+      .dateBtn {
+        aspect-ratio: 5/7; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        cursor: pointer; padding-top: 6px; transition: box-shadow 0.15s, border-color 0.15s;
+      }
+      .dateBtn:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(60, 40, 20, 0.1); }
+      .date-num { font-weight: bold; font-size: 15px; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; }
+      .room-label { font-size: 9px; width: 100%; text-align: center; margin-top: auto; padding: 3px 0; background: #f3ead2; color: #6b5310; font-weight: bold; }
+      .dateBtn.today { border-color: var(--primary); background: #fff; }
+      .dateBtn.today .date-num { background: var(--primary); color: #fff; }
+
+      /* 参加状況 */
+      #selectedDateText { margin: 0 0 8px; font-family: var(--serif); font-size: 22px; letter-spacing: 0.05em; user-select: none; -webkit-user-select: none; }
+      .loading { color: var(--soft); padding: 20px 0; text-align: center; }
+      .slot-box { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 12px; background: #fff; }
+      .slot-box.joined { border-color: #d9b0b0; background: #fffbfa; }
+      .slot-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+      .slot-time { font-weight: bold; font-size: 17px; }
+      .slot-count { font-size: 12px; color: var(--soft); background: var(--bg); border-radius: 999px; padding: 2px 9px; margin-left: 8px; }
+      .participant-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .participant-list li { font-size: 15px; }
+      .participant-list li.empty { color: var(--soft); font-size: 13px; }
 
       /* ネームプレート（段位で背景色が変わる） */
-      .participant-list li.has-plate::before { content: none; }
-      .participant-list li.has-plate { margin-left: -15px; }
       .plate {
-        display: inline-flex; align-items: center; gap: 8px; min-width: 120px;
-        padding: 6px 14px; border: 1px solid #bbb; border-radius: 4px;
-        font-weight: bold; letter-spacing: 0.05em; background: transparent; color: #111;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.15); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+        display: inline-flex; align-items: center; gap: 8px; min-width: 150px;
+        padding: 6px 14px; border: 1px solid #cfc8bc; border-radius: 6px;
+        font-weight: bold; letter-spacing: 0.05em; background: transparent; color: var(--ink);
+        box-shadow: 0 1px 2px rgba(60, 40, 20, 0.12); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
       }
-      .rank-badge { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,0.85); color: #111; }
-      .plate.rank-A { background: #f4a6a0; border-color: #d9776f; }
-      .plate.rank-B { background: #fff3a0; border-color: #dcc85a; }
-      .plate.rank-C { background: #b5e0b7; border-color: #7dbb80; }
-      .plate.rank-D { background: #a9d2f7; border-color: #6fa8dc; }
+      .rank-badge { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,0.8); color: var(--ink); font-weight: normal; }
+      .plate.rank-A { background: #f9d6d2; border-color: #e9b4ae; }
+      .plate.rank-B { background: #fcf5cf; border-color: #e6da9c; }
+      .plate.rank-C { background: #dbefde; border-color: #b3d6b8; }
+      .plate.rank-D { background: #d9e9f9; border-color: #b0cdea; }
       .plate.rank-E { background: transparent; }
       .plate.rank-E .rank-badge { border: 1px solid #bbb; }
 
@@ -78,31 +114,48 @@
       }
       @media (prefers-reduced-motion: reduce) { .plate { animation: none !important; } }
 
-      #profileArea select { width: auto; padding: 3px 6px; margin: 0 0 0 4px; font-size: 13px; }
+      #profileArea { display: inline-flex; gap: 6px; }
+      #profileArea select { width: auto; padding: 6px 8px; font-size: 13px; }
       .petal { position: fixed; top: -40px; font-size: 22px; pointer-events: none; z-index: 1000; animation: petalFall linear forwards; }
       @keyframes petalFall { to { transform: translateY(110vh) rotate(540deg); opacity: 0.2; } }
       /* 裏テーマ「ちはやふる」 */
       body.momiji { background: linear-gradient(180deg, #ffd0b8 0%, #fff1e0 60%, #ffe0cc 100%) fixed; }
       body.momiji .container { border-top: 4px solid #b71c1c; }
+      body.momiji .dateBtn { background: #fff8f3; }
       body.momiji .dateBtn.today { background: #ffebe6; border-color: #b71c1c; }
       #toast {
         position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff;
         padding: 10px 18px; border-radius: 20px; font-size: 14px; z-index: 1001; display: none; max-width: 90%; text-align: center;
       }
 
-      .admin-note { background: #fff9f9; padding: 15px; border-top: 2px solid var(--primary); margin-top: 20px; }
-      textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
-      .save-btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; font-weight: bold; border-radius: 4px; font-size: 16px; cursor: pointer; }
-      .join-btn { padding: 6px 14px; background: #fff; border: 1px solid var(--primary); color: var(--primary); border-radius: 4px; cursor: pointer; }
+      .admin-note { background: var(--paper); padding: 16px; border: 1px solid var(--line); border-radius: 12px; margin-top: 24px; }
+      .admin-title { font-family: var(--serif); font-weight: bold; color: var(--primary); margin-bottom: 12px; }
+      .admin-note label { display: block; font-size: 12px; color: var(--soft); letter-spacing: 0.08em; }
+      textarea, select, #userNameInput {
+        border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+        font-family: inherit; box-sizing: border-box;
+      }
+      textarea, .admin-note select { width: 100%; padding: 10px 12px; margin: 5px 0 14px; font-size: 16px; }
+      textarea:focus, select:focus, #userNameInput:focus { outline: 2px solid rgba(156, 74, 74, 0.2); border-color: var(--primary); }
+      .save-btn, .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; font-family: inherit; }
+      .save-btn { width: 100%; padding: 12px; font-size: 16px; }
+      .btn-primary { padding: 7px 14px; font-size: 14px; }
+      .save-btn:active, .btn-primary:active { opacity: 0.85; }
+      .btn-ghost { background: none; border: 1px solid var(--line); color: var(--soft); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; font-family: inherit; }
+      .join-btn {
+        padding: 7px 18px; background: #fff; border: 1.5px solid var(--primary); color: var(--primary);
+        border-radius: 999px; cursor: pointer; font-weight: bold; font-size: 14px; font-family: inherit; flex-shrink: 0;
+      }
       .join-btn.active { background: var(--primary); color: #fff; }
-      .back-link { color: var(--primary); cursor: pointer; margin-bottom: 15px; display: inline-block; text-decoration: underline; }
+      .back-link { background: none; border: none; padding: 0; color: var(--primary); cursor: pointer; margin-bottom: 12px; font-size: 14px; font-family: inherit; }
     </style>
   </head>
   <body>
-    <div id="userSection">
+    <header id="userSection">
+      <div class="brand"><span class="crest">歌</span><span class="brand-name">練習管理</span></div>
       <div id="loginArea">
-        <input id="userNameInput" placeholder="名前" style="width:70px">
-        <button onclick="login()">入室</button>
+        <input id="userNameInput" placeholder="名前" autocomplete="nickname">
+        <button class="btn-primary" onclick="login()">入室</button>
       </div>
       <div id="loggedInUser" style="display:none">
         <span id="userNameDisplay"></span>
@@ -124,34 +177,35 @@
             <option value="sumi">墨</option>
           </select>
         </span>
-        <button onclick="logout()">退室</button>
+        <button class="btn-ghost" onclick="logout()">退室</button>
       </div>
-    </div>
+    </header>
 
     <div class="container" id="calendarView">
       <div class="cal-header">
-        <button class="nav-btn" onclick="changeMonth(-1)">◀ 前月</button>
-        <h3 id="monthYear" style="margin:0;"></h3>
-        <button class="nav-btn" onclick="changeMonth(1)">次月 ▶</button>
+        <button class="nav-btn" onclick="changeMonth(-1)" aria-label="前月">‹</button>
+        <h3 id="monthYear"></h3>
+        <button class="nav-btn" onclick="changeMonth(1)" aria-label="次月">›</button>
       </div>
       <div id="calendar"></div>
     </div>
 
     <div class="container" id="detailView" style="display:none">
-      <span class="back-link" onclick="location.reload()">← カレンダーに戻る</span>
-      <h2 id="selectedDateText" style="margin:0 0 15px;"></h2>
-      
+      <button class="back-link" onclick="backToCalendar()">‹ カレンダーに戻る</button>
+      <h2 id="selectedDateText"></h2>
+
       <div id="slotList"></div>
 
       <div class="admin-note">
-        <label>🏠 部屋指定</label>
+        <div class="admin-title">この日の設定</div>
+        <label for="roomSelect">部屋</label>
         <select id="roomSelect">
           <option value="">未設定</option>
           <option value="和室A">和室A</option>
           <option value="和室B・C">和室B・C</option>
           <option value="和室A・B・C">和室A・B・C</option>
         </select>
-        <label>💬 連絡事項</label>
+        <label for="noteText">連絡事項</label>
         <textarea id="noteText" rows="2"></textarea>
         <button class="save-btn" id="saveAdminBtn">この日の情報を保存</button>
       </div>
@@ -358,7 +412,7 @@
       async function renderCalendar() {
         if(currentUser) {
           document.getElementById("loginArea").style.display = "none";
-          document.getElementById("loggedInUser").style.display = "block";
+          document.getElementById("loggedInUser").style.display = "flex";
           document.getElementById("userNameDisplay").textContent = currentUser;
         }
         const y = viewDate.getFullYear(), m = viewDate.getMonth() + 1;
@@ -374,7 +428,7 @@
 
           const cal = document.getElementById("calendar");
           cal.innerHTML = "";
-          ["日", "月", "火", "水", "木", "金", "土"].forEach(d => cal.innerHTML += `<div class="dayName">${d}</div>`);
+          ["日", "月", "火", "水", "木", "金", "土"].forEach((d, i) => cal.innerHTML += `<div class="dayName ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</div>`);
 
           const first = new Date(y, m - 1, 1).getDay();
           const last = new Date(y, m, 0).getDate();
@@ -388,12 +442,21 @@
             const btn = document.createElement("div");
             btn.className = "dateBtn";
             if (dateKey === todayKey) btn.classList.add("today");
+            const dow = (first + d - 1) % 7;
+            if (dow === 0) btn.classList.add("sun");
+            if (dow === 6) btn.classList.add("sat");
             
-            btn.innerHTML = `<span class="date-num">${d}</span>${notesMap[dateKey] ? `<div class="room-label">${notesMap[dateKey]}</div>` : ""}`;
+            btn.innerHTML = `<span class="date-num">${d}</span>${notesMap[dateKey] ? `<div class="room-label">${esc(notesMap[dateKey])}</div>` : ""}`;
             btn.onclick = () => showDetail(y, m, d);
             cal.appendChild(btn);
           }
         } catch (e) { console.error(e); }
+      }
+
+      function backToCalendar() {
+        document.getElementById("detailView").style.display = "none";
+        document.getElementById("calendarView").style.display = "block";
+        renderCalendar();
       }
 
       async function showDetail(y, m, d) {
@@ -403,7 +466,7 @@
         document.getElementById("selectedDateText").textContent = `${m}月${d}日 参加状況`;
 
         const listDiv = document.getElementById("slotList");
-        listDiv.innerHTML = "読み込み中...";
+        listDiv.innerHTML = '<div class="loading">読み込み中...</div>';
 
         try {
           // 全時間枠の参加者データを取得
@@ -416,13 +479,13 @@
             const members = data.participants || [];
             const isJoined = members.includes(currentUser);
             return `
-              <div class="slot-box">
+              <div class="slot-box ${isJoined ? 'joined' : ''}">
                 <div class="slot-title">
-                  <span>${slots[i]} (${members.length}名)</span>
+                  <span><span class="slot-time">${slots[i]}</span><span class="slot-count">${members.length}名</span></span>
                   <button class="join-btn ${isJoined ? 'active' : ''}" onclick="toggleJoin('${dateKey}','${slots[i]}')">${isJoined ? '取消' : '参加'}</button>
                 </div>
                 <ul class="participant-list">
-                  ${members.length > 0 ? members.map(plateHtml).join('') : '<li>なし</li>'}
+                  ${members.length > 0 ? members.map(plateHtml).join('') : '<li class="empty">まだ参加者がいません</li>'}
                 </ul>
               </div>`;
           }).join('');
@@ -445,7 +508,7 @@
             alert("保存しました");
             renderCalendar(); 
           };
-        } catch (e) { listDiv.innerHTML = "通信エラーが発生しました"; }
+        } catch (e) { listDiv.innerHTML = '<div class="loading">通信エラーが発生しました</div>'; }
       }
 
       async function toggleJoin(date, slot) {
