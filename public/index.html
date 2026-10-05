@@ -84,6 +84,54 @@
       .plate.rank-C { background: #dbefde; border-color: #b3d6b8; }
       .plate.rank-D { background: #d9e9f9; border-color: #b0cdea; }
       .plate.rank-E { background: transparent; }
+
+      /* 参加回数で解放されるプレート枠とアイコン */
+      .plate { position: relative; }
+      .plate-icon { position: absolute; top: -11px; left: -9px; font-size: 18px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2)); }
+      .participant-list li.has-icon { margin-top: 5px; }
+      .plate.frame-double { border: 4px double #a8977a; }
+      .plate.frame-gold { border: 2px solid #c9a227; box-shadow: inset 0 0 0 1px #f6e9b8, 0 1px 3px rgba(150, 110, 0, 0.25); }
+      .plate.frame-sakura { border: 2px solid #f1a7c0; box-shadow: 0 0 0 3px #fde6ee; }
+      .plate.frame-glow { border: 2px solid #e3bf55; animation: frameGlow 1.8s ease-in-out infinite alternate; }
+      .plate.frame-nishiki { border: 3px solid transparent; box-shadow: 0 2px 6px rgba(60, 40, 20, 0.2); }
+      .plate.frame-nishiki::before {
+        content: ""; position: absolute; inset: -3px; border-radius: 7px; padding: 3px; pointer-events: none;
+        background: linear-gradient(90deg, #d98880, #e6c35c, #8fc49a, #86b5e0, #b79bd6, #d98880);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor; mask-composite: exclude;
+      }
+      @keyframes frameGlow {
+        from { box-shadow: 0 0 2px 0 rgba(227, 191, 85, 0.5); }
+        to { box-shadow: 0 0 10px 3px rgba(227, 191, 85, 0.85); }
+      }
+
+      /* 実績パネル */
+      #achvOverlay {
+        position: fixed; inset: 0; background: rgba(40, 30, 20, 0.4); z-index: 900;
+        display: none; align-items: center; justify-content: center; padding: 16px;
+      }
+      .achv-card {
+        width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 16px;
+        padding: 20px; box-sizing: border-box; box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+      }
+      .achv-head { display: flex; justify-content: space-between; align-items: center; }
+      .achv-head h3 { margin: 0; font-family: var(--serif); letter-spacing: 0.08em; }
+      .achv-count { font-family: var(--serif); font-size: 34px; color: var(--primary); margin: 10px 0 0; }
+      .achv-count small { font-size: 14px; color: var(--soft); margin-left: 4px; }
+      .achv-note { font-size: 12px; color: var(--soft); margin: 2px 0 8px; }
+      .achv-bar { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+      .achv-bar > div { height: 100%; background: var(--accent); border-radius: 999px; }
+      .achv-section { font-size: 12px; color: var(--soft); letter-spacing: 0.08em; margin: 18px 0 8px; }
+      .unlock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+      .unlock-item {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 68px;
+        background: var(--paper); border: 1.5px solid var(--line); border-radius: 10px; cursor: pointer;
+        font-family: inherit; color: var(--ink); font-size: 11px; padding: 6px 4px;
+      }
+      .unlock-item .big { font-size: 24px; line-height: 1.1; }
+      .unlock-item.selected { border-color: var(--primary); background: #fff6f5; }
+      .unlock-item.locked { opacity: 0.45; cursor: not-allowed; }
+      .unlock-item .plate { min-width: 0; padding: 3px 10px; font-size: 12px; box-shadow: none; }
       .plate.rank-E .rank-badge { border: 1px solid #bbb; }
 
       /* 裏装飾 */
@@ -177,6 +225,7 @@
             <option value="sumi">墨</option>
           </select>
         </span>
+        <button class="btn-ghost" onclick="openAchievements()">🏅 実績</button>
         <button class="btn-ghost" onclick="logout()">退室</button>
       </div>
     </header>
@@ -209,6 +258,10 @@
         <textarea id="noteText" rows="2"></textarea>
         <button class="save-btn" id="saveAdminBtn">この日の情報を保存</button>
       </div>
+    </div>
+
+    <div id="achvOverlay" onclick="if(event.target === this) closeAchievements()">
+      <div class="achv-card" id="achvCard"></div>
     </div>
 
     <div id="toast"></div>
@@ -249,7 +302,77 @@
           const data = await fetch(`${API_BASE_URL}/api/members`).then(r => r.json());
           membersMap = {};
           (data.members || []).forEach(m => membersMap[m.name] = m);
+          if(data.unlocks) unlocks = data.unlocks;
         } catch (e) { console.error(e); }
+      }
+
+      // 参加回数で解放されるアイコン・枠（一覧はサーバーから受け取る）
+      let unlocks = { icons: [], frames: [] };
+      const myCount = () => (membersMap[currentUser] || {}).count || 0;
+      const unlockedItem = (list, id, count) => list.find(u => u.id === id && count >= u.need);
+
+      function openAchievements() {
+        renderAchievements();
+        document.getElementById("achvOverlay").style.display = "flex";
+      }
+      function closeAchievements() { document.getElementById("achvOverlay").style.display = "none"; }
+
+      function renderAchievements() {
+        const me = membersMap[currentUser] || {};
+        const count = me.count || 0;
+        const all = [...unlocks.icons, ...unlocks.frames].sort((a, b) => a.need - b.need);
+        const next = all.find(u => u.need > count);
+        const prevNeed = Math.max(0, ...all.filter(u => u.need <= count).map(u => u.need));
+        const pct = next ? Math.round((count - prevNeed) / (next.need - prevNeed) * 100) : 100;
+        const item = (kind, u, inner) => {
+          const locked = u.need > count;
+          const selected = (me[kind] || "") === u.id;
+          return `<button class="unlock-item ${locked ? 'locked' : ''} ${selected ? 'selected' : ''}" ${locked ? 'disabled' : ''} onclick="equip('${kind}','${u.id}')">${inner}<span>${locked ? '🔒 ' + u.need + '回' : (selected ? '装備中' : (u.label || '&nbsp;'))}</span></button>`;
+        };
+        const none = { id: "", need: 0, label: "なし" };
+        document.getElementById("achvCard").innerHTML = `
+          <div class="achv-head"><h3>実績</h3><button class="btn-ghost" onclick="closeAchievements()">閉じる</button></div>
+          <div class="achv-count">${count}<small>回 参加</small></div>
+          <div class="achv-note">部屋が設定されている日の参加（1枠＝1回）が数えられます。${next ? `次の解放まであと${next.need - count}回` : 'すべて解放済み'}</div>
+          <div class="achv-bar"><div style="width:${pct}%"></div></div>
+          <div class="achv-section">アイコン（プレートの上に表示）</div>
+          <div class="unlock-grid">
+            ${item('icon', none, '<span class="big">－</span>')}
+            ${unlocks.icons.map(u => item('icon', u, `<span class="big">${u.id}</span>`)).join('')}
+          </div>
+          <div class="achv-section">プレートの枠</div>
+          <div class="unlock-grid">
+            ${item('frame', none, '<span class="plate">見本</span>')}
+            ${unlocks.frames.map(u => item('frame', u, `<span class="plate frame-${u.id}">見本</span>`)).join('')}
+          </div>`;
+      }
+
+      async function equip(kind, id) {
+        if(!currentUser) return;
+        try {
+          const data = await fetch(`${API_BASE_URL}/api/members`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userName: currentUser, [kind]: id }),
+          }).then(r => r.json());
+          if(!data.success) throw new Error(data.error);
+          membersMap[currentUser] = data.member;
+          refreshMyPlates();
+          renderAchievements();
+        } catch (e) { showToast(e.message || "保存に失敗しました"); }
+      }
+
+      function refreshMyPlates() {
+        document.querySelectorAll("#slotList .plate").forEach(el => {
+          if(el.dataset.name === currentUser) el.parentElement.outerHTML = plateHtml(currentUser);
+        });
+      }
+
+      // 参加を押して回数が増えたとき、新しく解放されたものを知らせる
+      function announceUnlocks(before, after) {
+        const fresh = [...unlocks.icons.map(u => u.id), ...unlocks.frames.map(u => `枠「${u.label}」`)]
+          .filter((_, i) => { const u = [...unlocks.icons, ...unlocks.frames][i]; return u.need > before && u.need <= after; });
+        if(fresh.length) { petalRain(); showToast(`🎉 ${after}回達成！ ${fresh.join("・")} を解放（🏅実績から装備）`, 5000); }
       }
 
       function plateHtml(name) {
@@ -257,7 +380,9 @@
         const rank = RANKS.includes(m.rank) ? m.rank : "";
         const flair = FLAIR_LABELS[m.flair] ? m.flair : "";
         const badge = flair ? FLAIR_LABELS[flair] : (rank ? `${rank}級` : "");
-        return `<li class="has-plate"><span class="plate ${rank ? 'rank-' + rank : ''} ${flair ? 'flair-' + flair : ''}" data-name="${esc(name)}">${badge ? `<span class="rank-badge">${badge}</span>` : ''}${esc(name)}</span></li>`;
+        const icon = unlockedItem(unlocks.icons, m.icon, m.count || 0) ? m.icon : "";
+        const frame = unlockedItem(unlocks.frames, m.frame, m.count || 0) ? m.frame : "";
+        return `<li class="has-plate ${icon ? 'has-icon' : ''}"><span class="plate ${rank ? 'rank-' + rank : ''} ${frame ? 'frame-' + frame : ''} ${flair ? 'flair-' + flair : ''}" data-name="${esc(name)}">${icon ? `<span class="plate-icon">${icon}</span>` : ''}${badge ? `<span class="rank-badge">${badge}</span>` : ''}${esc(name)}</span></li>`;
       }
 
       function syncProfileUI() {
@@ -513,13 +638,15 @@
 
       async function toggleJoin(date, slot) {
         if(!currentUser) return alert("お名前を入力して入室してください");
+        const before = myCount();
         await fetch(`${API_BASE_URL}/api/participate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ date, timeSlot: slot, userName: currentUser }),
         });
         const p = date.split("-");
-        showDetail(p[0], p[1], p[2]);
+        await showDetail(p[0], p[1], p[2]);
+        announceUnlocks(before, myCount());
       }
 
       initSecrets();
